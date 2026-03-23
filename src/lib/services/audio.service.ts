@@ -25,7 +25,7 @@ async function getStreamToken(fileId: string): Promise<string> {
     return cached.token
   }
 
-  const res = await api.get<{ token: string; expires_in: number }>(`/audio/stream-token/${fileId}`)
+  const res = await api.get<{ token: string; expires_in: number }>(`/api/audio/stream-token/${fileId}`)
   tokenCache.set(fileId, {
     token: res.token,
     expiresAt: Date.now() + res.expires_in * 1000,
