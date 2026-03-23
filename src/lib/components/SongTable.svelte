@@ -169,7 +169,7 @@
 
   {#if music.loading}
     <div class="loading">Loading...</div>
-  {:else if mobile.isMobile}
+  {:else}
     <!-- Mobile: Card-based song list -->
     <div class="song-cards">
       {#each sortedSongs as song, i}
@@ -220,7 +220,6 @@
         </div>
       {/each}
     </div>
-  {:else}
     <!-- Desktop: Table view -->
     <div class="song-table">
       <table>
@@ -677,12 +676,22 @@
     color: var(--text-secondary);
   }
 
-  /* Mobile card styles */
+  /* Mobile card styles - hidden on desktop */
   .song-cards {
     flex: 1;
     overflow-y: auto;
-    display: flex;
+    display: none;
     flex-direction: column;
+  }
+
+  @media (max-width: 768px) {
+    .song-cards {
+      display: flex;
+    }
+
+    .song-table {
+      display: none !important;
+    }
   }
 
   .song-card {

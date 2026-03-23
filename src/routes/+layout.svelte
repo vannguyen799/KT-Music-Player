@@ -53,28 +53,18 @@
 <CategorySidebar />
 
 <div class="app">
-  {#if mobile.isMobile}
-    <!-- Mobile: Header always on top, Player always on bottom -->
-    <Header />
-    <main class="main-content">
-      {@render children()}
-    </main>
+  {#if player.playerPosition === 'top'}
     <PlayerBar />
   {:else}
-    <!-- Desktop: Configurable player position -->
-    {#if player.playerPosition === 'top'}
-      <PlayerBar />
-    {:else}
-      <Header />
-    {/if}
-    <main class="main-content">
-      {@render children()}
-    </main>
-    {#if player.playerPosition === 'bottom'}
-      <PlayerBar />
-    {:else}
-      <Header />
-    {/if}
+    <Header />
+  {/if}
+  <main class="main-content">
+    {@render children()}
+  </main>
+  {#if player.playerPosition === 'bottom'}
+    <PlayerBar />
+  {:else}
+    <Header />
   {/if}
 </div>
 
