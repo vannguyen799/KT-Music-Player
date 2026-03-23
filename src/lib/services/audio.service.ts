@@ -1,4 +1,5 @@
 import { parseBlob } from 'music-metadata-browser'
+import { env } from '$env/dynamic/public'
 import { api } from '$lib/services/api'
 
 async function ensureBuffer() {
@@ -32,7 +33,7 @@ async function getStreamToken(fileId: string): Promise<string> {
   return res.token
 }
 
-const WORKER_URL = import.meta.env.PUBLIC_STREAM_WORKER_URL as string | undefined
+const WORKER_URL = env.PUBLIC_STREAM_WORKER_URL
 
 function useWorker(): boolean {
   return location.protocol === 'https:' && !!WORKER_URL
