@@ -368,8 +368,12 @@ export function getPlayerStore() {
     toggleLoop,
     toggleRandom,
     resetConfig() {
-      applyConfig({ volume: 0.7, speed: 1, loopMode: 'all', isRandom: false, playerPosition: 'bottom', showLyrics: false })
+      const defaults: PlayerConfig = { volume: 0.7, speed: 1, loopMode: 'all', isRandom: false, playerPosition: 'bottom', showLyrics: false }
+      applyConfig(defaults)
       if (typeof localStorage !== 'undefined') localStorage.removeItem(STORAGE_KEY)
+      if (isLoggedIn) {
+        api.put('/api/user/player-config', { playerConfig: defaults }).catch(() => {})
+      }
     },
   }
 }

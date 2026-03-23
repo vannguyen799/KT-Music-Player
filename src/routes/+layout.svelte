@@ -72,7 +72,7 @@
   .app {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     transition: margin-left 0.25s ease;
   }
