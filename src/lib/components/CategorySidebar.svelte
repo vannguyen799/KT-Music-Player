@@ -4,11 +4,14 @@
   import { getMusicStore } from '$lib/stores/music.store.svelte'
   import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
+  import ChangePasswordModal from './ChangePasswordModal.svelte'
   import type { Category } from '$lib/services/admin.service'
 
   const music = getMusicStore()
   const mobile = getMobileStore()
   const auth = getAuthStore()
+
+  let showChangePassword = $state(false)
 
   interface TreeNode {
     category: Category
@@ -123,6 +126,18 @@
     {@render renderNodes(tree, 0)}
   </div>
 
+  {#if auth.isLoggedIn}
+    <div class="sidebar-section">
+      <h3>Account</h3>
+      <div class="category-list">
+        <button class="cat-item admin-item" onclick={() => { showChangePassword = true; mobile.closeSidebar() }}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span class="cat-label">Change Password</span>
+        </button>
+      </div>
+    </div>
+  {/if}
+
   {#if auth.isAdmin}
     <div class="sidebar-section">
       <h3>Admin</h3>
@@ -139,6 +154,10 @@
     </div>
   {/if}
 </aside>
+
+{#if showChangePassword}
+  <ChangePasswordModal onclose={() => showChangePassword = false} />
+{/if}
 
 <style>
   .category-sidebar {
@@ -259,9 +278,12 @@
   }
 
   .sidebar-section {
-    margin-top: auto;
     border-top: 1px solid var(--border);
     padding-top: 0.5rem;
+  }
+
+  .sidebar-section:first-of-type {
+    margin-top: auto;
   }
 
   .sidebar-section h3 {

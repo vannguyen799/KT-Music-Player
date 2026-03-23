@@ -41,6 +41,14 @@ export class UserService {
     return bcrypt.compare(plain, hashed)
   }
 
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const user = await this.repo.findByIdWithPassword(userId)
+    if (!user) throw new NotFoundError('User not found')
+    const valid = await bcrypt.compare(oldPassword, user.password)
+    if (!valid) throw new ValidationError('Current password is incorrect')
+    await this.repo.changePassword(userId, newPassword)
+  }
+
   toPublic(user: IUser): PublicUser {
     return {
       id: user.id,

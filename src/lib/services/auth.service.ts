@@ -50,6 +50,10 @@ export async function getMe(): Promise<{ user: User }> {
   return api.get<{ user: User }>('/api/auth/me')
 }
 
+export async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
+  await api.post('/api/auth/change-password', { oldPassword, newPassword })
+}
+
 export function logout(): void {
   clearAuth()
 }

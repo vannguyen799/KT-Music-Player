@@ -15,6 +15,11 @@ export class UserRepository extends BaseRepository<IUser> {
     return doc ? toPlain<IUser>(doc) : null
   }
 
+  async findByIdWithPassword(id: string): Promise<IUser | null> {
+    const doc = await this.model.findById(id).select('+password').lean()
+    return doc ? toPlain<IUser>(doc) : null
+  }
+
   async findByUsernameWithPassword(username: string): Promise<IUser | null> {
     const doc = await this.model.findOne({ username }).select('+password').lean()
     return doc ? toPlain<IUser>(doc) : null
@@ -65,6 +70,13 @@ export class UserRepository extends BaseRepository<IUser> {
       { returnDocument: 'after' },
     ).lean()
     return doc ? toPlain<IUser>(doc) : null
+  }
+
+  async changePassword(userId: string, newPassword: string): Promise<void> {
+    const doc = await this.model.findById(userId).select('+password')
+    if (!doc) return
+    doc.password = newPassword
+    await doc.save()
   }
 
   async removePlaylist(userId: string, playlistName: string): Promise<IUser | null> {

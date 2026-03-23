@@ -1,5 +1,4 @@
 <script lang="ts">
-  import CategorySidebar from '$lib/components/CategorySidebar.svelte'
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import { getMusicStore } from '$lib/stores/music.store.svelte'
 
@@ -15,7 +14,6 @@
 </script>
 
 <div class="page-layout">
-  <CategorySidebar />
   {@render children()}
 </div>
 

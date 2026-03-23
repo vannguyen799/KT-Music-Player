@@ -1,5 +1,5 @@
 import type { User } from '$lib/types/user'
-import { restoreAuth, logout as logoutService, login as loginService, register as registerService } from '$lib/services/auth.service'
+import { restoreAuth, logout as logoutService, login as loginService, register as registerService, changePassword as changePasswordService } from '$lib/services/auth.service'
 import { getPlayerStore } from '$lib/stores/player.store.svelte'
 import { destroyActivityTracker } from '$lib/utils/activity-tracker'
 
@@ -51,6 +51,10 @@ export function getAuthStore() {
     player.setLoggedIn(false)
   }
 
+  async function changePassword(oldPassword: string, newPassword: string) {
+    await changePasswordService(oldPassword, newPassword)
+  }
+
   function isFavorite(fileId: string): boolean {
     return user?.favorite?.includes(fileId) ?? false
   }
@@ -70,6 +74,7 @@ export function getAuthStore() {
     login,
     register,
     logout,
+    changePassword,
     isFavorite,
     updateFavorites,
   }

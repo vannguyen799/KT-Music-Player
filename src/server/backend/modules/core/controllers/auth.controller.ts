@@ -34,4 +34,10 @@ export class AuthController {
     const user = await this.userService.findById(auth.id)
     return sendSuccess({ user: this.userService.toPublic(user) })
   }
+
+  @Post('/change-password')
+  async changePassword(@Auth() auth: AuthPayload, @Body() body: { oldPassword: string; newPassword: string }) {
+    await this.userService.changePassword(auth.id, body.oldPassword, body.newPassword)
+    return sendSuccess(null, 'Password changed successfully')
+  }
 }

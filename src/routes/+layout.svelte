@@ -2,6 +2,7 @@
   import '../app.css'
   import Header from '$lib/components/Header.svelte'
   import PlayerBar from '$lib/components/PlayerBar.svelte'
+  import CategorySidebar from '$lib/components/CategorySidebar.svelte'
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import { getPlayerStore } from '$lib/stores/player.store.svelte'
   import { getMobileStore } from '$lib/stores/mobile.store.svelte'
@@ -48,6 +49,8 @@
     }
   })
 </script>
+
+<CategorySidebar />
 
 <div class="app">
   {#if mobile.isMobile}
