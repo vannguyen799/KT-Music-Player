@@ -1,0 +1,36 @@
+{
+  "name": "kt-player",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 5200",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@sveltejs/adapter-node": "^5.0.0",
+    "@sveltejs/kit": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@truxie/sveltekit": "0.1.0",
+    "bcryptjs": "^3.0.3",
+    "buffer": "^6.0.3",
+    "googleapis": "^144.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.2",
+    "music-metadata-browser": "^2.5.11",
+    "pinyin": "^4.0.0",
+    "svelte": "^5.0.0",
+    "truxie": "0.1.0-test.14",
+    "vite": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.0.0",
+    "reflect-metadata": "^0.2.2",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.8.0"
+  }
+}

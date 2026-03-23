@@ -1,0 +1,69 @@
+:root {
+  --bg-primary: rgb(37, 39, 40);
+  --bg-secondary: rgb(30, 32, 33);
+  --bg-tertiary: rgb(45, 47, 49);
+  --bg-hover: rgb(55, 57, 59);
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #707070;
+  --accent: #1db954;
+  --accent-hover: #1ed760;
+  --danger: #e74c3c;
+  --border: rgb(60, 62, 64);
+  --player-height: 75px;
+  --header-height: 40px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+}
+
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-hover);
+}
