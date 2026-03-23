@@ -1,6 +1,7 @@
 import type { User } from '$lib/types/user'
 import { restoreAuth, logout as logoutService, login as loginService, register as registerService, changePassword as changePasswordService } from '$lib/services/auth.service'
 import { getPlayerStore } from '$lib/stores/player.store.svelte'
+import { getMobileStore } from '$lib/stores/mobile.store.svelte'
 import { destroyActivityTracker } from '$lib/utils/activity-tracker'
 
 let user = $state<User | null>(null)
@@ -8,6 +9,7 @@ let token = $state('')
 
 export function getAuthStore() {
   const player = getPlayerStore()
+  const mobile = getMobileStore()
   const isLoggedIn = $derived(!!token && !!user)
   const isAdmin = $derived(user?.role === 0)
 
@@ -49,6 +51,7 @@ export function getAuthStore() {
     user = null
     token = ''
     player.setLoggedIn(false)
+    mobile.resetSidebar()
   }
 
   async function changePassword(oldPassword: string, newPassword: string) {
