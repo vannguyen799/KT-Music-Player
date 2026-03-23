@@ -7,7 +7,9 @@
     "dev": "vite dev --port 5200",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "tmux": "tmux new-session -A -s ktmp",
+    "claude:d": "claude --dangerously-skip-permissions"
   },
   "dependencies": {
     "@sveltejs/adapter-node": "^5.0.0",

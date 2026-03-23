@@ -5,7 +5,7 @@ A personal music streaming app built with SvelteKit 5 and a Cloudflare Worker fo
 ## Tech Stack
 
 - **Frontend** — Svelte 5 with SvelteKit, TypeScript
-- **Backend** — SvelteKit server routes + [Truxie](https://github.com/nicoder/truxie) modular backend (controllers, services, use-cases)
+- **Backend** — SvelteKit server routes + [Truxie](https://github.com/vannguyen799/truxie) modular backend (controllers, services, use-cases)
 - **Database** — MongoDB (via Mongoose)
 - **Storage** — Google Drive (audio files)
 - **Streaming** — Cloudflare Worker (`worker/`) proxies audio with signed tokens
