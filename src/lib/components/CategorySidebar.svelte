@@ -1,9 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
   import { getMusicStore } from '$lib/stores/music.store.svelte'
+  import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import type { Category } from '$lib/services/admin.service'
 
   const music = getMusicStore()
+  const mobile = getMobileStore()
 
   interface TreeNode {
     category: Category
@@ -47,16 +49,42 @@
     if (hasChildren(cat.id) && !expanded.has(cat.id)) {
       expanded = new Set([...expanded, cat.id])
     }
+    if (mobile.isMobile) {
+      mobile.closeSidebar()
+    }
+  }
+
+  function goHome() {
+    goto('/')
+    if (mobile.isMobile) {
+      mobile.closeSidebar()
+    }
   }
 </script>
 
-<aside class="category-sidebar">
-  <h3>Categories</h3>
+<!-- Mobile: backdrop overlay -->
+{#if mobile.isMobile && mobile.sidebarOpen}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div class="sidebar-backdrop" onclick={() => mobile.closeSidebar()}></div>
+{/if}
+
+<aside class="category-sidebar" class:mobile-open={mobile.isMobile && mobile.sidebarOpen} class:mobile-hidden={mobile.isMobile && !mobile.sidebarOpen}>
+  <div class="sidebar-header">
+    <h3>Categories</h3>
+    {#if mobile.isMobile}
+      <button class="close-btn" onclick={() => mobile.closeSidebar()} title="Close menu">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    {/if}
+  </div>
   <div class="category-list">
     <button
       class="cat-item"
       class:active={music.currentCategory === null}
-      onclick={() => goto('/')}
+      onclick={goHome}
     >
       <span class="cat-label">All Songs</span>
     </button>
@@ -104,13 +132,34 @@
     background: var(--bg-secondary);
   }
 
-  h3 {
-    font-size: 0.85rem;
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 0 0.75rem;
     margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 0.85rem;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    margin: 0;
+  }
+
+  .close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    padding: 0.2rem;
+    border-radius: 4px;
+  }
+
+  .close-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
   }
 
   .category-list {
@@ -179,9 +228,49 @@
     flex-shrink: 0;
   }
 
+  /* Mobile: sidebar becomes slide-out drawer */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 200;
+  }
+
   @media (max-width: 768px) {
     .category-sidebar {
-      width: 160px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      z-index: 210;
+      padding-top: 1rem;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .category-sidebar.mobile-open {
+      transform: translateX(0);
+    }
+
+    .category-sidebar.mobile-hidden {
+      transform: translateX(-100%);
+    }
+
+    .cat-item {
+      padding: 0.6rem 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .arrow {
+      width: 24px;
+      height: 24px;
+      font-size: 0.8rem;
+    }
+
+    .arrow-placeholder {
+      width: 24px;
     }
   }
 </style>

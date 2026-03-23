@@ -17,7 +17,6 @@
 <div class="page-layout">
   <CategorySidebar />
   {@render children()}
-
 </div>
 
 <style>

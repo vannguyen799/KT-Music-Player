@@ -2,6 +2,7 @@
   import { getMusicStore } from '$lib/stores/music.store.svelte'
   import { getPlayerStore } from '$lib/stores/player.store.svelte'
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
+  import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import { getDisplayTitle, getDisplayArtist, localize, hasLyricsForLang, getAvailableLyricLangs, type Song } from '$lib/types/song'
   import { toggleSong, deleteSong } from '$lib/services/admin.service'
   import FavoriteButton from './FavoriteButton.svelte'
@@ -11,6 +12,7 @@
   const music = getMusicStore()
   const player = getPlayerStore()
   const auth = getAuthStore()
+  const mobile = getMobileStore()
 
   let sortBy = $state('')
   let editingSong = $state<Song | null>(null)
@@ -167,7 +169,59 @@
 
   {#if music.loading}
     <div class="loading">Loading...</div>
+  {:else if mobile.isMobile}
+    <!-- Mobile: Card-based song list -->
+    <div class="song-cards">
+      {#each sortedSongs as song, i}
+        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
+        <div
+          class="song-card"
+          class:active={isCurrentSong(song)}
+          class:disabled-song={song.disabled}
+          onclick={() => playSong(song, i)}
+        >
+          <div class="card-play-indicator">
+            {#if isCurrentSong(song) && player.isPlaying}
+              <span class="card-playing-icon">&#10074;&#10074;</span>
+            {:else}
+              <span class="card-play-icon">&#9654;</span>
+            {/if}
+          </div>
+          <div class="card-info">
+            <div class="card-title-row">
+              <span class="card-title">{getDisplayTitle(song)}</span>
+              <div class="card-badges">
+                {#if song.ext}
+                  <span
+                    class="badge quality-badge"
+                    class:lossless={['flac', 'wav', 'alac', 'aiff', 'ape', 'dsd'].includes(song.ext.toLowerCase())}
+                  >{song.ext.toUpperCase()}</span>
+                {/if}
+                {#if getAvailableLyricLangs(song).length > 0}
+                  <span class="badge lyric-badge">Lyric</span>
+                {/if}
+              </div>
+            </div>
+            <div class="card-subtitle">
+              <span class="card-artist">{getDisplayArtist(song)}</span>
+              <span class="card-listens">{song.listens} plays</span>
+            </div>
+          </div>
+          <div class="card-actions" onclick={(e) => e.stopPropagation()}>
+            {#if auth.isLoggedIn}
+              <FavoriteButton {song} />
+            {/if}
+            {#if auth.isAdmin}
+              <button class="edit-btn" onclick={() => editingSong = song} title="Edit">
+                <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M16.474 5.408L18.592 7.526M17.836 3.374L12.109 9.1C11.81 9.4 11.611 9.783 11.54 10.198L11 13L13.802 12.46C14.217 12.389 14.6 12.19 14.9 11.891L20.626 6.164C20.9935 5.79651 21.1985 5.30348 21.1985 4.789C21.1985 4.27453 20.9935 3.7815 20.626 3.414C20.2585 3.04651 19.7655 2.8415 19.251 2.8415C18.7365 2.8415 18.2435 3.04651 17.876 3.414L17.836 3.374Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 15V18C19 19.105 18.105 20 17 20H6C4.895 20 4 19.105 4 18V7C4 5.895 4.895 5 6 5H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            {/if}
+          </div>
+        </div>
+      {/each}
+    </div>
   {:else}
+    <!-- Desktop: Table view -->
     <div class="song-table">
       <table>
         <thead>
@@ -623,6 +677,113 @@
     color: var(--text-secondary);
   }
 
+  /* Mobile card styles */
+  .song-cards {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .song-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  .song-card:active {
+    background-color: var(--bg-hover);
+  }
+
+  .song-card.active {
+    background-color: var(--bg-tertiary);
+  }
+
+  .song-card.disabled-song {
+    opacity: 0.45;
+  }
+
+  .card-play-indicator {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+  }
+
+  .song-card.active .card-play-indicator {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .card-playing-icon {
+    font-size: 0.6rem;
+  }
+
+  .card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-badges {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .card-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .card-artist {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-listens {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
   .pagination {
     display: flex;
     align-items: center;
@@ -661,5 +822,53 @@
     padding: 0 0.25rem;
     color: var(--text-muted);
     font-size: 0.8rem;
+  }
+
+  @media (max-width: 768px) {
+    .song-section {
+      padding: 0.25rem 0.5rem;
+    }
+
+    .section-header {
+      gap: 0.5rem;
+      padding: 0.4rem 0;
+    }
+
+    .category-title {
+      font-size: 1rem;
+    }
+
+    .table-actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.4rem;
+    }
+
+    .actions-left {
+      width: 100%;
+    }
+
+    .search-input {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+
+    .pagination {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .page-btn {
+      min-width: 1.8rem;
+      height: 1.8rem;
+      font-size: 0.75rem;
+    }
+
+    .confirm-dialog {
+      width: calc(100vw - 2rem);
+      max-width: 360px;
+      padding: 1.25rem;
+    }
   }
 </style>

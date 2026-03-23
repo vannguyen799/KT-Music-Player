@@ -136,4 +136,22 @@
     color: var(--accent);
     text-decoration: underline;
   }
+
+  @media (max-width: 768px) {
+    .modal-content {
+      width: calc(100vw - 2rem);
+      max-width: 320px;
+      padding: 1.5rem;
+    }
+
+    input {
+      padding: 0.65rem;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      padding: 0.65rem;
+      font-size: 1rem;
+    }
+  }
 </style>

@@ -1,10 +1,12 @@
 <script lang="ts">
   import { getPlayerStore } from '$lib/stores/player.store.svelte'
+  import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import { getDisplayTitle, getDisplayArtist } from '$lib/types/song'
   import LyricsDisplay from './LyricsDisplay.svelte'
   import FullscreenPlayer from './FullscreenPlayer.svelte'
 
   const player = getPlayerStore()
+  const mobile = getMobileStore()
 
   let showFullscreen = $state(false)
   let showSettings = $state(false)
@@ -60,10 +62,11 @@
   let hoverX = $state(0)
   let showHoverTime = $state(false)
 
-  function seekHandler(e: MouseEvent) {
+  function seekHandler(e: MouseEvent | TouchEvent) {
     const bar = e.currentTarget as HTMLElement
     const rect = bar.getBoundingClientRect()
-    const pct = (e.clientX - rect.left) / rect.width
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     player.seek(pct * player.duration)
   }
 
@@ -83,143 +86,191 @@
   }
 </script>
 
-<footer class="player-bar" class:has-song={!!player.currentSong} class:position-top={player.playerPosition === 'top'}>
-  <!-- Progress bar -->
-  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="progress-bar" onclick={seekHandler} onmousemove={onProgressHover} onmouseleave={() => showHoverTime = false}>
-    <div class="progress-fill" style="width: {progress}%"></div>
-    {#if showHoverTime && player.duration > 0}
-      <div class="progress-tooltip" style="left: {hoverX}px">{hoverTime}</div>
-    {/if}
-  </div>
+{#if mobile.isMobile}
+  <!-- Mobile Player Bar -->
+  <footer class="player-bar mobile-player" class:has-song={!!player.currentSong}>
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="progress-bar mobile-progress" onclick={seekHandler} ontouchstart={seekHandler}>
+      <div class="progress-fill" style="width: {progress}%"></div>
+    </div>
 
-  <div class="player-content">
-    <!-- Song info -->
-    <div class="song-info">
-      <div class="cover-wrapper">
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="mobile-player-content" onclick={() => showFullscreen = true}>
+      <div class="mobile-cover">
         {#if player.coverUrl}
           <img class="cover-img" src={player.coverUrl} alt="Cover art" />
         {:else}
           <div class="cover-placeholder">&#9835;</div>
         {/if}
       </div>
-      <div class="song-text">
+      <div class="mobile-song-text">
         {#if player.currentSong}
-          <span class="song-title" title={getDisplayTitle(player.currentSong)}>{getDisplayTitle(player.currentSong)}</span>
-          <span class="song-artist" title={getDisplayArtist(player.currentSong)}>{getDisplayArtist(player.currentSong)}</span>
+          <span class="song-title">{getDisplayTitle(player.currentSong)}</span>
+          <span class="song-artist">{getDisplayArtist(player.currentSong)}</span>
         {:else}
           <span class="song-title empty">No song playing</span>
         {/if}
       </div>
+      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+      <div class="mobile-controls" onclick={(e) => e.stopPropagation()}>
+        <button class="mobile-ctrl-btn" onclick={() => player.playPrev()}>
+          &#9664;&#9664;
+        </button>
+        <button class="mobile-ctrl-btn mobile-play-pause" onclick={() => player.togglePlay()}>
+          {#if player.isLoading}
+            ...
+          {:else if player.isPlaying}
+            &#10074;&#10074;
+          {:else}
+            &#9654;
+          {/if}
+        </button>
+        <button class="mobile-ctrl-btn" onclick={() => player.playNext()}>
+          &#9654;&#9654;
+        </button>
+      </div>
+    </div>
+  </footer>
+{:else}
+  <!-- Desktop Player Bar -->
+  <footer class="player-bar" class:has-song={!!player.currentSong} class:position-top={player.playerPosition === 'top'}>
+    <!-- Progress bar -->
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="progress-bar" onclick={seekHandler} onmousemove={onProgressHover} onmouseleave={() => showHoverTime = false}>
+      <div class="progress-fill" style="width: {progress}%"></div>
+      {#if showHoverTime && player.duration > 0}
+        <div class="progress-tooltip" style="left: {hoverX}px">{hoverTime}</div>
+      {/if}
     </div>
 
-    <!-- Center: Lyrics (only when enabled) -->
-    {#if player.showLyrics}
-      <div class="center-lyrics">
-        <LyricsDisplay />
-      </div>
-    {/if}
-
-    <!-- Controls (right side) -->
-    <div class="controls">
-      <button class="ctrl-btn" onclick={() => player.playPrev()} title="Previous">
-        &#9664;&#9664;
-      </button>
-      <button class="ctrl-btn play-pause" onclick={() => player.togglePlay()} title={player.isPlaying ? 'Pause' : 'Play'}>
-        {#if player.isLoading}
-          ...
-        {:else if player.isPlaying}
-          &#10074;&#10074;
-        {:else}
-          &#9654;
-        {/if}
-      </button>
-      <button class="ctrl-btn" onclick={() => player.playNext()} title="Next">
-        &#9654;&#9654;
-      </button>
-    </div>
-
-    <!-- Right side -->
-    <div class="player-right">
-      <span class="time">{formatTime(player.currentTime)} / {formatTime(player.duration)}</span>
-      <button class="ctrl-btn" onclick={() => showFullscreen = true} title="Fullscreen player">
-        &#9974;
-      </button>
-
-      <!-- Volume with hover popover -->
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="volume-wrapper" onmouseenter={onVolumeEnter} onmouseleave={onVolumeLeave}>
-        <button class="ctrl-btn volume-icon" onclick={toggleMute} title={player.volume === 0 ? 'Unmute' : 'Mute'}>
-          {volumeIcon()}
-        </button>
-        {#if showVolumePopover}
-          <div class="volume-popover">
-            <input
-              type="range"
-              class="volume-slider-vertical"
-              min="0"
-              max="1"
-              step="0.01"
-              value={player.volume}
-              oninput={(e) => player.setVolume(parseFloat((e.target as HTMLInputElement).value))}
-              {...{ orient: 'vertical' } as any}
-            />
-            <span class="volume-label">{Math.round(player.volume * 100)}%</span>
-          </div>
-        {/if}
+    <div class="player-content">
+      <!-- Song info -->
+      <div class="song-info">
+        <div class="cover-wrapper">
+          {#if player.coverUrl}
+            <img class="cover-img" src={player.coverUrl} alt="Cover art" />
+          {:else}
+            <div class="cover-placeholder">&#9835;</div>
+          {/if}
+        </div>
+        <div class="song-text">
+          {#if player.currentSong}
+            <span class="song-title" title={getDisplayTitle(player.currentSong)}>{getDisplayTitle(player.currentSong)}</span>
+            <span class="song-artist" title={getDisplayArtist(player.currentSong)}>{getDisplayArtist(player.currentSong)}</span>
+          {:else}
+            <span class="song-title empty">No song playing</span>
+          {/if}
+        </div>
       </div>
 
-      <!-- Settings popover -->
-      <div class="settings-wrapper">
-        <button class="ctrl-btn" onclick={() => showSettings = !showSettings} class:active={showSettings} title="Settings">
-          &#9881;
+      <!-- Center: Lyrics (only when enabled) -->
+      {#if player.showLyrics}
+        <div class="center-lyrics">
+          <LyricsDisplay />
+        </div>
+      {/if}
+
+      <!-- Controls (right side) -->
+      <div class="controls">
+        <button class="ctrl-btn" onclick={() => player.playPrev()} title="Previous">
+          &#9664;&#9664;
         </button>
-        {#if showSettings}
-          <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-          <div class="settings-backdrop" onclick={() => showSettings = false}></div>
-          <div class="settings-popover">
-            <div class="settings-item">
-              <span class="settings-label">Lyrics</span>
-              <button class="ctrl-btn" onclick={() => player.setShowLyrics(!player.showLyrics)} class:active={player.showLyrics}>
-                {player.showLyrics ? 'ON' : 'OFF'}
-              </button>
-            </div>
-            <div class="settings-item">
-              <span class="settings-label">Speed</span>
+        <button class="ctrl-btn play-pause" onclick={() => player.togglePlay()} title={player.isPlaying ? 'Pause' : 'Play'}>
+          {#if player.isLoading}
+            ...
+          {:else if player.isPlaying}
+            &#10074;&#10074;
+          {:else}
+            &#9654;
+          {/if}
+        </button>
+        <button class="ctrl-btn" onclick={() => player.playNext()} title="Next">
+          &#9654;&#9654;
+        </button>
+      </div>
+
+      <!-- Right side -->
+      <div class="player-right">
+        <span class="time">{formatTime(player.currentTime)} / {formatTime(player.duration)}</span>
+        <button class="ctrl-btn" onclick={() => showFullscreen = true} title="Fullscreen player">
+          &#9974;
+        </button>
+
+        <!-- Volume with hover popover -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="volume-wrapper" onmouseenter={onVolumeEnter} onmouseleave={onVolumeLeave}>
+          <button class="ctrl-btn volume-icon" onclick={toggleMute} title={player.volume === 0 ? 'Unmute' : 'Mute'}>
+            {volumeIcon()}
+          </button>
+          {#if showVolumePopover}
+            <div class="volume-popover">
               <input
-                type="number"
-                class="speed-input"
-                min="0.1"
-                max="4"
-                step="0.05"
-                value={player.speed}
-                oninput={onSpeedInput}
+                type="range"
+                class="volume-slider-vertical"
+                min="0"
+                max="1"
+                step="0.01"
+                value={player.volume}
+                oninput={(e) => player.setVolume(parseFloat((e.target as HTMLInputElement).value))}
+                {...{ orient: 'vertical' } as any}
               />
+              <span class="volume-label">{Math.round(player.volume * 100)}%</span>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Shuffle</span>
-              <button class="ctrl-btn" onclick={() => player.toggleRandom()} class:active={player.isRandom}>
-                {player.isRandom ? 'ON' : 'OFF'}
-              </button>
+          {/if}
+        </div>
+
+        <!-- Settings popover -->
+        <div class="settings-wrapper">
+          <button class="ctrl-btn" onclick={() => showSettings = !showSettings} class:active={showSettings} title="Settings">
+            &#9881;
+          </button>
+          {#if showSettings}
+            <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+            <div class="settings-backdrop" onclick={() => showSettings = false}></div>
+            <div class="settings-popover">
+              <div class="settings-item">
+                <span class="settings-label">Lyrics</span>
+                <button class="ctrl-btn" onclick={() => player.setShowLyrics(!player.showLyrics)} class:active={player.showLyrics}>
+                  {player.showLyrics ? 'ON' : 'OFF'}
+                </button>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Speed</span>
+                <input
+                  type="number"
+                  class="speed-input"
+                  min="0.1"
+                  max="4"
+                  step="0.05"
+                  value={player.speed}
+                  oninput={onSpeedInput}
+                />
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Shuffle</span>
+                <button class="ctrl-btn" onclick={() => player.toggleRandom()} class:active={player.isRandom}>
+                  {player.isRandom ? 'ON' : 'OFF'}
+                </button>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Loop</span>
+                <button class="ctrl-btn" onclick={() => player.toggleLoop()} class:active={player.loopMode !== 'none'}>
+                  {loopLabel()}
+                </button>
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Position</span>
+                <button class="ctrl-btn" onclick={() => player.togglePlayerPosition()}>
+                  {player.playerPosition === 'top' ? 'TOP' : 'BOTTOM'}
+                </button>
+              </div>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Loop</span>
-              <button class="ctrl-btn" onclick={() => player.toggleLoop()} class:active={player.loopMode !== 'none'}>
-                {loopLabel()}
-              </button>
-            </div>
-            <div class="settings-item">
-              <span class="settings-label">Position</span>
-              <button class="ctrl-btn" onclick={() => player.togglePlayerPosition()}>
-                {player.playerPosition === 'top' ? 'TOP' : 'BOTTOM'}
-              </button>
-            </div>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     </div>
-  </div>
-</footer>
+  </footer>
+{/if}
 
 {#if showFullscreen}
   <FullscreenPlayer onclose={() => showFullscreen = false} />
@@ -519,5 +570,112 @@
     margin-bottom: 0;
     margin-top: 14px;
     transform: translateX(-100%);
+  }
+
+  /* Mobile Player Styles */
+  .mobile-player {
+    height: var(--player-height);
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .mobile-progress {
+    height: 3px;
+  }
+
+  .mobile-player-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    gap: 0.75rem;
+    cursor: pointer;
+  }
+
+  .mobile-cover {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+  }
+
+  .mobile-cover .cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  .mobile-cover .cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    font-size: 1.2rem;
+    color: var(--text-muted);
+  }
+
+  .mobile-song-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .mobile-song-text .song-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-song-text .song-artist {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .mobile-ctrl-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .mobile-ctrl-btn:active {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .mobile-play-pause {
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+  }
+
+  .mobile-play-pause:active {
+    background: var(--accent-hover);
+    color: #fff;
   }
 </style>

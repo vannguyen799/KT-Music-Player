@@ -4,6 +4,7 @@
   import PlayerBar from '$lib/components/PlayerBar.svelte'
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import { getPlayerStore } from '$lib/stores/player.store.svelte'
+  import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import { onMount, onDestroy } from 'svelte'
   import { afterNavigate } from '$app/navigation'
   import { initActivityTracker, destroyActivityTracker, trackNavigation } from '$lib/utils/activity-tracker'
@@ -11,6 +12,7 @@
   let { children } = $props()
   const auth = getAuthStore()
   const player = getPlayerStore()
+  const mobile = getMobileStore()
 
   let trackerStarted = false
 
@@ -48,18 +50,28 @@
 </script>
 
 <div class="app">
-  {#if player.playerPosition === 'top'}
+  {#if mobile.isMobile}
+    <!-- Mobile: Header always on top, Player always on bottom -->
+    <Header />
+    <main class="main-content">
+      {@render children()}
+    </main>
     <PlayerBar />
   {:else}
-    <Header />
-  {/if}
-  <main class="main-content">
-    {@render children()}
-  </main>
-  {#if player.playerPosition === 'bottom'}
-    <PlayerBar />
-  {:else}
-    <Header />
+    <!-- Desktop: Configurable player position -->
+    {#if player.playerPosition === 'top'}
+      <PlayerBar />
+    {:else}
+      <Header />
+    {/if}
+    <main class="main-content">
+      {@render children()}
+    </main>
+    {#if player.playerPosition === 'bottom'}
+      <PlayerBar />
+    {:else}
+      <Header />
+    {/if}
   {/if}
 </div>
 
