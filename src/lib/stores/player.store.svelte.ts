@@ -120,8 +120,7 @@ function getNextIndex(): number | null {
 
   if (loopMode === 'one') return currentIndex
 
-  if (isRandom) return Math.floor(Math.random() * queue.length)
-
+  // When isRandom, queue is already shuffled by backend — just play sequentially
   const nextIdx = currentIndex + 1
   if (nextIdx >= queue.length) {
     return loopMode === 'all' ? 0 : null
@@ -261,15 +260,11 @@ export function getPlayerStore() {
       return
     }
 
-    let nextIdx: number
-    if (isRandom) {
-      nextIdx = Math.floor(Math.random() * queue.length)
-    } else {
-      nextIdx = currentIndex + 1
-      if (nextIdx >= queue.length) {
-        if (loopMode === 'all') nextIdx = 0
-        else return
-      }
+    // When isRandom, queue is already shuffled by backend — play sequentially
+    let nextIdx = currentIndex + 1
+    if (nextIdx >= queue.length) {
+      if (loopMode === 'all') nextIdx = 0
+      else return
     }
 
     currentIndex = nextIdx

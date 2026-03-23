@@ -5,7 +5,7 @@
   import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import { getDisplayTitle, getDisplayArtist, localize, hasLyricsForLang, getAvailableLyricLangs, type Song } from '$lib/types/song'
   import { toggleSong, deleteSong } from '$lib/services/admin.service'
-  import { getAllSongsByCategory } from '$lib/services/song.service'
+  import { getShuffledSongsByCategory } from '$lib/services/song.service'
   import FavoriteButton from './FavoriteButton.svelte'
   import SongEditModal from './SongEditModal.svelte'
   import UploadModal from './UploadModal.svelte'
@@ -34,27 +34,13 @@
     return list
   })
 
-  function shuffleArray<T>(arr: T[]): T[] {
-    const shuffled = [...arr]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!]
-    }
-    return shuffled
-  }
-
   async function playShuffled(song: Song) {
     if (!music.currentCategory) {
-      // No category — shuffle from current page songs
-      const shuffled = shuffleArray(sortedSongs)
-      const idx = shuffled.findIndex(s => s.fileId === song.fileId)
-      player.setQueue(shuffled, idx >= 0 ? idx : 0)
+      player.setQueue(sortedSongs, 0)
       return
     }
-    // Fetch all songs from the category
     try {
-      const allSongs = await getAllSongsByCategory(music.currentCategory.id)
-      const shuffled = shuffleArray(allSongs)
+      const shuffled = await getShuffledSongsByCategory(music.currentCategory.id)
       // Put the clicked song first
       const idx = shuffled.findIndex(s => s.fileId === song.fileId)
       if (idx > 0) {
@@ -62,7 +48,6 @@
       }
       player.setQueue(shuffled, 0)
     } catch {
-      // Fallback to current page
       player.setQueue(sortedSongs, sortedSongs.findIndex(s => s.fileId === song.fileId))
     }
   }

@@ -15,10 +15,16 @@ export class SongController {
     @Query('page') page: string,
     @Query('limit') limit: string,
     @Query('search') search: string,
+    @Query('shuffle') shuffle: string,
   ) {
+    // Shuffle mode: return all songs from category in random order
+    if (shuffle === 'true' && category) {
+      const result = await this.songService.getShuffledSongs(category)
+      return sendSuccess(result)
+    }
+
     const p = Math.max(1, parseInt(page) || 1)
-    const rawLimit = parseInt(limit)
-    const l = rawLimit === 0 ? 0 : Math.min(100, Math.max(1, rawLimit || 50))
+    const l = Math.min(100, Math.max(1, parseInt(limit) || 50))
     const q = search?.trim() || ''
 
     if (!category && !q) {

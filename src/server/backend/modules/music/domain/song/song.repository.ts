@@ -62,10 +62,8 @@ export class SongRepository extends BaseRepository<ISong> {
         { filename: regex },
       ]
     }
-    const query = this.model.find(filter)
-    if (limit > 0) query.skip((page - 1) * limit).limit(limit)
     const [docs, total] = await Promise.all([
-      query.lean(),
+      this.model.find(filter).skip((page - 1) * limit).limit(limit).lean(),
       this.model.countDocuments(filter),
     ])
     return { songs: docs.map(normalizeSong), total }
@@ -115,6 +113,21 @@ export class SongRepository extends BaseRepository<ISong> {
     const [docs, total] = await Promise.all([
       this.model.find(filter).skip((page - 1) * limit).limit(limit).lean(),
       this.model.countDocuments(filter),
+    ])
+    return { songs: docs.map(normalizeSong), total }
+  }
+
+  async findByCategoryShuffled(
+    categoryId: string,
+    includeDisabled = false,
+  ): Promise<{ songs: ISong[]; total: number }> {
+    const filter: Record<string, unknown> = { categories: categoryId }
+    if (!includeDisabled) filter.disabled = { $ne: true }
+    const total = await this.model.countDocuments(filter)
+    if (total === 0) return { songs: [], total: 0 }
+    const docs = await this.model.aggregate([
+      { $match: filter },
+      { $sample: { size: total } },
     ])
     return { songs: docs.map(normalizeSong), total }
   }

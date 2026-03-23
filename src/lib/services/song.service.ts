@@ -33,8 +33,8 @@ export async function searchSongs(query: string, page = 1, limit = 50): Promise<
   return api.get<PaginatedSongs>(`/api/songs?search=${encodeURIComponent(query)}&page=${page}&limit=${limit}`)
 }
 
-export async function getAllSongsByCategory(categoryId: string): Promise<Song[]> {
-  const result = await api.get<PaginatedSongs>(`/api/songs?category=${encodeURIComponent(categoryId)}&limit=0`)
+export async function getShuffledSongsByCategory(categoryId: string): Promise<Song[]> {
+  const result = await api.get<PaginatedSongs>(`/api/songs?category=${encodeURIComponent(categoryId)}&shuffle=true`)
   return result.songs
 }
 

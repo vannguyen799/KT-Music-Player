@@ -29,6 +29,10 @@ export class SongService {
     return this.repo.findByCategoryIdPaginated(categoryId, page, limit, search)
   }
 
+  async getShuffledSongs(categoryId: string): Promise<{ songs: ISong[]; total: number }> {
+    return this.repo.findByCategoryShuffled(categoryId)
+  }
+
   async getAll(page = 1, limit = 50): Promise<{ songs: ISong[]; total: number }> {
     const excludeCategories = await this.getDisabledCategoryIds()
     return this.repo.findAllPaginated(page, limit, false, excludeCategories)
