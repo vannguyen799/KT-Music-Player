@@ -1,16 +1,15 @@
-import { Inject, Controller, Get, Post, Put, RouteGuards, NoGuard, Body, Param, Query } from 'truxie'
-import { Auth, AuthGuard, AdminGuard, type AuthPayload } from '$backend/guards/auth.guard'
+import { Inject, Controller, Get, Post, Put, RouteGuards, Body, Param, Query } from 'truxie'
+import { Auth, AdminGuard, type AuthPayload } from '$backend/guards/auth.guard'
 import { SongService } from '../domain/song'
 import { sendSuccess } from '$backend/shared/response'
 
 @Inject(SongService)
 @Controller('songs')
-@RouteGuards(AuthGuard)
+@RouteGuards(AdminGuard)
 export class SongController {
   constructor(private readonly songService: SongService) {}
 
   @Get('/')
-  @NoGuard()
   async getSongs(
     @Query('category') category: string,
     @Query('page') page: string,
@@ -36,21 +35,18 @@ export class SongController {
   }
 
   @Get('/file/:fileId')
-  @NoGuard()
   async getSong(@Param('fileId') fileId: string) {
     const song = await this.songService.findByFileId(fileId)
     return sendSuccess(song)
   }
 
   @Post('/:fileId/listen')
-  @NoGuard()
   async trackListen(@Param('fileId') fileId: string) {
     await this.songService.addListens(fileId)
     return sendSuccess(null, 'Listen tracked')
   }
 
   @Put('/:fileId')
-  @RouteGuards(AdminGuard)
   async updateSong(
     @Param('fileId') fileId: string,
     @Body() body: Record<string, unknown>,

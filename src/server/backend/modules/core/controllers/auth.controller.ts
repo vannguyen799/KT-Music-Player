@@ -1,5 +1,5 @@
 import { Inject, Controller, Get, Post, RouteGuards, NoGuard, Body } from 'truxie'
-import { Auth, AuthGuard, type AuthPayload } from '$backend/guards/auth.guard'
+import { Auth, AdminGuard, type AuthPayload } from '$backend/guards/auth.guard'
 import { LoginUseCase } from '../use-cases/login.use-case'
 import { RegisterUseCase } from '../use-cases/register.use-case'
 import { UserService } from '../domain/user'
@@ -7,7 +7,7 @@ import { sendSuccess } from '$backend/shared/response'
 
 @Inject(LoginUseCase, RegisterUseCase, UserService)
 @Controller('auth')
-@RouteGuards(AuthGuard)
+@RouteGuards(AdminGuard)
 export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,

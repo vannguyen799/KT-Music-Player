@@ -1,13 +1,14 @@
 <script lang="ts">
   import CategorySidebar from '$lib/components/CategorySidebar.svelte'
-
+  import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import { getMusicStore } from '$lib/stores/music.store.svelte'
 
   let { children } = $props()
+  const auth = getAuthStore()
   const music = getMusicStore()
 
   $effect(() => {
-    if (music.categories.length === 0) {
+    if (auth.isLoggedIn && music.categories.length === 0) {
       music.loadCategories()
     }
   })

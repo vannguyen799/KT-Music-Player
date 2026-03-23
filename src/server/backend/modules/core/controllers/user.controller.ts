@@ -1,12 +1,12 @@
 import { Inject, Controller, Post, Delete, Get, Put, RouteGuards, Body } from 'truxie'
-import { Auth, AuthGuard, type AuthPayload } from '$backend/guards/auth.guard'
+import { Auth, AdminGuard, type AuthPayload } from '$backend/guards/auth.guard'
 import { UserService } from '../domain/user'
 import { sendSuccess } from '$backend/shared/response'
 import type { IPlayerConfig } from '../domain/user/user.types'
 
 @Inject(UserService)
 @Controller('user')
-@RouteGuards(AuthGuard)
+@RouteGuards(AdminGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

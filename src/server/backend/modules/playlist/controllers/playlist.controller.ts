@@ -1,12 +1,12 @@
 import { Inject, Controller, Get, Post, Put, Delete, RouteGuards, Body, Param } from 'truxie'
-import { Auth, AuthGuard, type AuthPayload } from '$backend/guards/auth.guard'
+import { Auth, AdminGuard, type AuthPayload } from '$backend/guards/auth.guard'
 import { PlaylistService } from '../domain/playlist.service'
 import { sendSuccess } from '$backend/shared/response'
 import type { IPlaylist } from '$backend/modules/core/domain/user/user.types'
 
 @Inject(PlaylistService)
 @Controller('playlists')
-@RouteGuards(AuthGuard)
+@RouteGuards(AdminGuard)
 export class PlaylistController {
   constructor(private readonly playlistService: PlaylistService) {}
 

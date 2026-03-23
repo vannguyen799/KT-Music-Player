@@ -16,3 +16,9 @@ Thumbs.db
 # Editor
 .vscode/
 *.swp
+
+# Deployment
+.vercel/
+
+# NPM config (may contain tokens)
+.npmrc

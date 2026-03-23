@@ -4,15 +4,46 @@
   import PlayerBar from '$lib/components/PlayerBar.svelte'
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import { getPlayerStore } from '$lib/stores/player.store.svelte'
-  import { onMount } from 'svelte'
+  import { onMount, onDestroy } from 'svelte'
+  import { afterNavigate } from '$app/navigation'
+  import { initActivityTracker, destroyActivityTracker, trackNavigation } from '$lib/utils/activity-tracker'
 
   let { children } = $props()
   const auth = getAuthStore()
   const player = getPlayerStore()
 
+  let trackerStarted = false
+
+  function startTrackerIfNeeded() {
+    if (auth.isLoggedIn && auth.user && !trackerStarted) {
+      initActivityTracker(auth.user.id, auth.user.username)
+      trackerStarted = true
+    }
+  }
+
   onMount(() => {
     player.restoreFromLocalStorage()
     auth.restore()
+    startTrackerIfNeeded()
+  })
+
+  // Track SvelteKit client-side navigations
+  afterNavigate(({ from, to }) => {
+    // Start tracker after login navigation
+    startTrackerIfNeeded()
+
+    const fromPath = from?.url?.pathname || ''
+    const toPath = to?.url?.pathname || ''
+    if (fromPath && toPath && fromPath !== toPath) {
+      trackNavigation(fromPath, toPath)
+    }
+  })
+
+  onDestroy(() => {
+    if (trackerStarted) {
+      destroyActivityTracker()
+      trackerStarted = false
+    }
   })
 </script>
 

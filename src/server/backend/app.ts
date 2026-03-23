@@ -1,4 +1,4 @@
-import { TruxieFactory } from 'truxie'
+import { TruxieFactory, type EventEmitter2 } from 'truxie'
 import { AppModule } from './modules/app.module'
 import { AppErrorFilter } from './filters/app-error.filter'
 import { connectDatabase } from './shared/database'
@@ -22,6 +22,10 @@ app.setGlobalPrefix('api')
 
 export function resolve<T>(token: any): Promise<T> {
   return app.resolve<T>(token)
+}
+
+export function getEventEmitter(): EventEmitter2 {
+  return app.getEventEmitter()
 }
 
 export { app }
