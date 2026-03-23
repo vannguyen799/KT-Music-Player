@@ -171,6 +171,8 @@
     padding: 1rem 0 0.75rem;
     overflow-y: auto;
     background: var(--bg-secondary);
+    border-right: 3px solid;
+    border-image: linear-gradient(to bottom, #4285F4 25%, #EA4335 25%, #EA4335 50%, #FBBC05 50%, #FBBC05 75%, #34A853 75%) 1;
     display: flex;
     flex-direction: column;
     transform: translateX(-100%);
