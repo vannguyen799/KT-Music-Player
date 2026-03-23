@@ -65,7 +65,7 @@
   function seekHandler(e: MouseEvent | TouchEvent) {
     const bar = e.currentTarget as HTMLElement
     const rect = bar.getBoundingClientRect()
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientX = 'touches' in e ? e.touches[0]?.clientX ?? 0 : e.clientX
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     player.seek(pct * player.duration)
   }

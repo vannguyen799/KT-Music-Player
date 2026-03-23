@@ -103,23 +103,23 @@
   }
 
   async function runDuplicateCheck(indices: number[]) {
-    const songs = indices.map((i) => ({ title: files[i].title, artist: files[i].artist }))
+    const songs = indices.map((i) => ({ title: files[i]!.title, artist: files[i]!.artist }))
     try {
       const results = await checkDuplicates(songs)
       const resultMap = new Map(results.map((r) => [r.index, r.matches]))
       for (let j = 0; j < indices.length; j++) {
-        const fi = indices[j]
+        const fi = indices[j]!
         const matches = resultMap.get(j)
-        files[fi].duplicates = matches?.map((m) => ({
+        files[fi]!.duplicates = matches?.map((m) => ({
           title: m.title,
           artist: m.artist,
           filename: m.filename,
         }))
-        files[fi].checking = false
+        files[fi]!.checking = false
       }
     } catch {
       for (const fi of indices) {
-        files[fi].checking = false
+        files[fi]!.checking = false
       }
     }
     files = [...files]
