@@ -245,11 +245,27 @@ export function getPlayerStore() {
     scheduleSave()
   }
 
+  function shuffleRemaining() {
+    if (queue.length <= 1) return
+    const before = queue.slice(0, currentIndex + 1)
+    const after = queue.slice(currentIndex + 1)
+    for (let i = after.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [after[i], after[j]] = [after[j]!, after[i]!]
+    }
+    queue = [...before, ...after]
+  }
+
   function setQueue(songs: Song[], startIndex = 0) {
     queue = songs
     currentIndex = startIndex
     const song = songs[startIndex]
     if (song) playSong(song)
+  }
+
+  function replaceQueue(songs: Song[], currentIdx = 0) {
+    queue = songs
+    currentIndex = currentIdx
   }
 
   function playNext() {
@@ -297,6 +313,9 @@ export function getPlayerStore() {
 
   function toggleRandom() {
     isRandom = !isRandom
+    if (isRandom && queue.length > 0) {
+      shuffleRemaining()
+    }
     scheduleSave()
   }
 
@@ -342,6 +361,8 @@ export function getPlayerStore() {
     setVolume,
     setSpeed,
     setQueue,
+    replaceQueue,
+    shuffleRemaining,
     playNext,
     playPrev,
     toggleLoop,

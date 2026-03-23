@@ -34,21 +34,30 @@
     return list
   })
 
-  async function playShuffled(song: Song) {
-    if (!music.currentCategory) {
-      player.setQueue(sortedSongs, 0)
-      return
-    }
-    try {
-      const shuffled = await getShuffledSongsByCategory(music.currentCategory.id)
-      // Put the clicked song first
-      const idx = shuffled.findIndex(s => s.fileId === song.fileId)
-      if (idx > 0) {
-        [shuffled[0], shuffled[idx]] = [shuffled[idx]!, shuffled[0]!]
-      }
-      player.setQueue(shuffled, 0)
-    } catch {
-      player.setQueue(sortedSongs, sortedSongs.findIndex(s => s.fileId === song.fileId))
+  function playShuffled(song: Song) {
+    // Play clicked song immediately with current page songs
+    const idx = sortedSongs.findIndex(s => s.fileId === song.fileId)
+    player.setQueue(sortedSongs, idx >= 0 ? idx : 0)
+    player.shuffleRemaining()
+
+    // If we have a category, fetch ALL songs shuffled from backend and replace queue
+    if (music.currentCategory) {
+      const categoryId = music.currentCategory.id
+      const playingSongFileId = song.fileId
+      getShuffledSongsByCategory(categoryId).then(shuffled => {
+        // Only replace if still playing the same song (user didn't change)
+        if (player.currentSong?.fileId !== playingSongFileId) return
+        // Put current song at index 0
+        const i = shuffled.findIndex(s => s.fileId === playingSongFileId)
+        if (i > 0) {
+          [shuffled[0], shuffled[i]] = [shuffled[i]!, shuffled[0]!]
+        } else if (i < 0) {
+          shuffled.unshift(song)
+        }
+        player.replaceQueue(shuffled, 0)
+      }).catch(() => {
+        // Keep the local shuffled queue as fallback
+      })
     }
   }
 
