@@ -2,7 +2,7 @@ const MOBILE_BREAKPOINT = 768
 const SIDEBAR_KEY = 'kt_sidebar_open'
 
 let isMobile = $state(false)
-let sidebarOpen = $state(true)
+let sidebarOpen = $state(false)
 
 function loadSidebarState(): boolean {
   if (typeof localStorage === 'undefined') return true

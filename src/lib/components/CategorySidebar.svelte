@@ -6,11 +6,13 @@
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import ChangePasswordModal from './ChangePasswordModal.svelte'
   import Icon from './Icon.svelte'
+  import { getPlayerStore } from '$lib/stores/player.store.svelte'
   import type { Category } from '$lib/services/admin.service'
 
   const music = getMusicStore()
   const mobile = getMobileStore()
   const auth = getAuthStore()
+  const player = getPlayerStore()
 
   let showChangePassword = $state(false)
 
@@ -128,6 +130,10 @@
         <button class="cat-item admin-item" onclick={() => { showChangePassword = true; if (mobile.isMobile) mobile.closeSidebar() }}>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           <span class="cat-label">Change Password</span>
+        </button>
+        <button class="cat-item admin-item" onclick={() => { player.resetConfig(); mobile.resetSidebar(); if (mobile.isMobile) mobile.closeSidebar() }}>
+          <Icon name="refresh" size={14} />
+          <span class="cat-label">Reset Config</span>
         </button>
       </div>
     </div>

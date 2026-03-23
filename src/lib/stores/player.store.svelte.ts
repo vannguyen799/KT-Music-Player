@@ -367,5 +367,9 @@ export function getPlayerStore() {
     playPrev,
     toggleLoop,
     toggleRandom,
+    resetConfig() {
+      applyConfig({ volume: 0.7, speed: 1, loopMode: 'all', isRandom: false, playerPosition: 'bottom', showLyrics: false })
+      if (typeof localStorage !== 'undefined') localStorage.removeItem(STORAGE_KEY)
+    },
   }
 }
