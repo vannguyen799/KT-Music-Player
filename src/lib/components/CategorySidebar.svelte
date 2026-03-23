@@ -15,6 +15,7 @@
   const player = getPlayerStore()
 
   let showChangePassword = $state(false)
+  let showResetConfirm = $state(false)
 
   interface TreeNode {
     category: Category
@@ -131,7 +132,7 @@
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           <span class="cat-label">Change Password</span>
         </button>
-        <button class="cat-item admin-item" onclick={() => { player.resetConfig(); mobile.resetSidebar(); if (mobile.isMobile) mobile.closeSidebar() }}>
+        <button class="cat-item admin-item" onclick={() => { showResetConfirm = true; if (mobile.isMobile) mobile.closeSidebar() }}>
           <Icon name="refresh" size={14} />
           <span class="cat-label">Reset Config</span>
         </button>
@@ -160,6 +161,23 @@
   <ChangePasswordModal onclose={() => showChangePassword = false} />
 {/if}
 
+<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+{#if showResetConfirm}
+  <div class="confirm-backdrop" onclick={() => showResetConfirm = false}>
+    <div class="confirm-dialog" onclick={(e) => e.stopPropagation()}>
+      <div class="confirm-icon">
+        <Icon name="refresh" size={32} />
+      </div>
+      <h3 class="confirm-title">Reset Config</h3>
+      <p class="confirm-text">Are you sure you want to reset all settings to defaults?</p>
+      <div class="confirm-actions">
+        <button class="btn-confirm-cancel" onclick={() => showResetConfirm = false}>Cancel</button>
+        <button class="btn-confirm-reset" onclick={() => { player.resetConfig(); mobile.resetSidebar(); showResetConfirm = false }}>Reset</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
   .category-sidebar {
     position: fixed;
@@ -171,8 +189,7 @@
     padding: 1rem 0 0.75rem;
     overflow-y: auto;
     background: var(--bg-secondary);
-    border-right: 3px solid;
-    border-image: linear-gradient(to bottom, #4285F4 25%, #EA4335 25%, #EA4335 50%, #FBBC05 50%, #FBBC05 75%, #34A853 75%) 1;
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     transform: translateX(-100%);
@@ -310,6 +327,91 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
       z-index: 200;
+    }
+  }
+
+  .confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+  }
+
+  .confirm-dialog {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem 2rem;
+    width: 320px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .confirm-icon {
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .confirm-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-primary);
+  }
+
+  .confirm-text {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    width: 100%;
+  }
+
+  .btn-confirm-cancel {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+  }
+
+  .btn-confirm-cancel:hover {
+    background: var(--bg-hover);
+  }
+
+  .btn-confirm-reset {
+    flex: 1;
+    padding: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .btn-confirm-reset:hover {
+    opacity: 0.9;
+  }
+
+  @media (max-width: 768px) {
+    .confirm-dialog {
+      width: calc(100vw - 2rem);
+      max-width: 320px;
+      padding: 1.25rem;
     }
   }
 

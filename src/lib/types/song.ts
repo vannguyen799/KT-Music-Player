@@ -18,6 +18,7 @@ export interface Song {
   disabled?: boolean
   note?: string
   listens: number
+  thumbnailLink?: string
   ext: string
   filename: string
   sampleRate?: number

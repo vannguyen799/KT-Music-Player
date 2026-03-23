@@ -2,7 +2,7 @@ import type { Song } from '$lib/types/song'
 import type { Category } from '$lib/services/admin.service'
 import { getCategories, getAllSongs, getSongsByCategory, searchSongs } from '$lib/services/song.service'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 21
 
 let categories = $state<Category[]>([])
 let currentCategory = $state<Category | null>(null)

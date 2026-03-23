@@ -38,6 +38,46 @@ export async function getShuffledSongsByCategory(categoryId: string): Promise<So
   return result.songs
 }
 
+/** Fetch all songs for a category (all pages) */
+export async function getAllSongsByCategory(categoryId: string): Promise<Song[]> {
+  const limit = 100
+  const first = await getSongsByCategory(categoryId, 1, limit)
+  const all = [...first.songs]
+  const totalPages = Math.ceil(first.total / limit)
+  const promises: Promise<PaginatedSongs>[] = []
+  for (let p = 2; p <= totalPages; p++) {
+    promises.push(getSongsByCategory(categoryId, p, limit))
+  }
+  const results = await Promise.all(promises)
+  for (const r of results) all.push(...r.songs)
+  return all
+}
+
+/** Fetch all songs across all categories (all pages) */
+export async function fetchAllSongs(): Promise<Song[]> {
+  const limit = 100
+  const first = await getAllSongs(1, limit)
+  const all = [...first.songs]
+  const totalPages = Math.ceil(first.total / limit)
+  const promises: Promise<PaginatedSongs>[] = []
+  for (let p = 2; p <= totalPages; p++) {
+    promises.push(getAllSongs(p, limit))
+  }
+  const results = await Promise.all(promises)
+  for (const r of results) all.push(...r.songs)
+  return all
+}
+
+/** Fetch all file IDs for a category/search context (lightweight) */
+export async function getSongFileIds(categoryId?: string, search?: string): Promise<string[]> {
+  let url = '/api/songs/ids'
+  const params: string[] = []
+  if (categoryId) params.push(`category=${encodeURIComponent(categoryId)}`)
+  if (search) params.push(`search=${encodeURIComponent(search)}`)
+  if (params.length) url += '?' + params.join('&')
+  return api.get<string[]>(url)
+}
+
 export async function getSongByFileId(fileId: string): Promise<Song | null> {
   return api.get<Song | null>(`/api/songs/file/${fileId}`)
 }

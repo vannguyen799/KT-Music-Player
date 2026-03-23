@@ -79,7 +79,7 @@ export class GoogleDriveClient {
     do {
       const res = await this.drive.files.list({
         q,
-        fields: 'nextPageToken, files(id, name, mimeType, size)',
+        fields: 'nextPageToken, files(id, name, mimeType, size, thumbnailLink)',
         pageSize: 1000,
         pageToken,
       })

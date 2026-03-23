@@ -137,6 +137,29 @@ export class SongRepository extends BaseRepository<ISong> {
     return docs.map(normalizeSong)
   }
 
+  async findFileIds(
+    categoryId?: string,
+    search?: string,
+    includeDisabled = false,
+    excludeCategories: string[] = [],
+  ): Promise<string[]> {
+    const filter: Record<string, unknown> = {}
+    if (categoryId) filter.categories = categoryId
+    if (!includeDisabled) filter.disabled = { $ne: true }
+    if (excludeCategories.length > 0 && !categoryId) filter.categories = { $nin: excludeCategories }
+    if (search) {
+      const regex = { $regex: search, $options: 'i' }
+      filter.$or = [
+        { 'title.origin': regex }, { 'title.vi': regex }, { 'title.en': regex },
+        { 'title.zh': regex }, { 'title.ja': regex }, { 'title.ko': regex },
+        { 'artist.origin': regex }, { 'artist.vi': regex }, { 'artist.en': regex },
+        { 'artist.zh': regex }, { filename: regex },
+      ]
+    }
+    const docs = await this.model.find(filter).select('fileId').lean()
+    return docs.map((d: any) => d.fileId as string)
+  }
+
   async findByFileId(fileId: string): Promise<ISong | null> {
     const doc = await this.model.findOne({ fileId }).lean()
     return doc ? normalizeSong(doc) : null
@@ -182,6 +205,7 @@ export class SongRepository extends BaseRepository<ISong> {
             sheet: song.sheet,
             status: song.status,
             listens: song.listens,
+            thumbnailLink: song.thumbnailLink || '',
             ext: song.ext,
             filename: song.filename,
           },

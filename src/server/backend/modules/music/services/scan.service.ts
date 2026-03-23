@@ -79,6 +79,7 @@ export class ScanService {
           categories: [category.id],
           status: '',
           listens: 0,
+          thumbnailLink: file.thumbnailLink ?? '',
           ext,
           filename: buildFilename(parsed.title, parsed.artist, ext),
           _scanStatus: 'new',

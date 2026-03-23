@@ -41,6 +41,16 @@ export class SongController {
     return sendSuccess(result)
   }
 
+  @Get('/ids')
+  async getFileIds(
+    @Query('category') category: string,
+    @Query('search') search: string,
+  ) {
+    const q = search?.trim() || ''
+    const ids = await this.songService.getFileIds(category || undefined, q || undefined)
+    return sendSuccess(ids)
+  }
+
   @Get('/file/:fileId')
   async getSong(@Param('fileId') fileId: string) {
     const song = await this.songService.findByFileId(fileId)

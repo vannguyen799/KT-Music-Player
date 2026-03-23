@@ -5,11 +5,11 @@
   import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import { getDisplayTitle, getDisplayArtist, localize, hasLyricsForLang, getAvailableLyricLangs, type Song } from '$lib/types/song'
   import { toggleSong, deleteSong } from '$lib/services/admin.service'
-  import { getShuffledSongsByCategory } from '$lib/services/song.service'
   import FavoriteButton from './FavoriteButton.svelte'
   import SongEditModal from './SongEditModal.svelte'
   import UploadModal from './UploadModal.svelte'
   import Icon from './Icon.svelte'
+  import { extractDominantColor } from '$lib/utils/color'
 
   const music = getMusicStore()
   const player = getPlayerStore()
@@ -23,6 +23,20 @@
   let deletingSong = $state<Song | null>(null)
   let deleteInProgress = $state(false)
 
+  // Cache extracted dominant colors by fileId
+  let colorCache = $state<Map<string, string>>(new Map())
+
+  function getCardColor(song: Song): string | null {
+    if (!song.thumbnailLink) return null
+    const cached = colorCache.get(song.fileId)
+    if (cached) return cached
+    // Trigger async extraction
+    extractDominantColor(song.thumbnailLink).then((color) => {
+      colorCache = new Map(colorCache).set(song.fileId, color)
+    })
+    return null
+  }
+
   const sortedSongs = $derived.by(() => {
     let list = [...music.filteredSongs]
     const loc = (t: Song['title']) => localize(t)
@@ -35,34 +49,7 @@
     return list
   })
 
-  function playShuffled(song: Song) {
-    // Play clicked song immediately with current page songs
-    const idx = sortedSongs.findIndex(s => s.fileId === song.fileId)
-    player.setQueue(sortedSongs, idx >= 0 ? idx : 0)
-    player.shuffleRemaining()
-
-    // If we have a category, fetch ALL songs shuffled from backend and replace queue
-    if (music.currentCategory) {
-      const categoryId = music.currentCategory.id
-      const playingSongFileId = song.fileId
-      getShuffledSongsByCategory(categoryId).then(shuffled => {
-        // Only replace if still playing the same song (user didn't change)
-        if (player.currentSong?.fileId !== playingSongFileId) return
-        // Put current song at index 0
-        const i = shuffled.findIndex(s => s.fileId === playingSongFileId)
-        if (i > 0) {
-          [shuffled[0], shuffled[i]] = [shuffled[i]!, shuffled[0]!]
-        } else if (i < 0) {
-          shuffled.unshift(song)
-        }
-        player.replaceQueue(shuffled, 0)
-      }).catch(() => {
-        // Keep the local shuffled queue as fallback
-      })
-    }
-  }
-
-  function playSong(song: Song, index: number) {
+  function playSong(song: Song, _index: number) {
     if (player.isLoading) return
     if (isCurrentSong(song) && player.isPlaying) {
       player.pause()
@@ -72,11 +59,10 @@
       player.resume()
       return
     }
-    if (player.isRandom) {
-      playShuffled(song)
-    } else {
-      player.setQueue(sortedSongs, index)
-    }
+    player.startPlay(song, {
+      categoryId: music.currentCategory?.id,
+      search: music.searchQuery?.trim() || undefined,
+    })
   }
 
   function isCurrentSong(song: Song): boolean {
@@ -144,10 +130,11 @@
       {/if}
     </h2>
     <button class="play-all-btn" onclick={() => {
-      if (player.isRandom && sortedSongs.length > 0) {
-        playShuffled(sortedSongs[0]!)
-      } else {
-        player.setQueue(sortedSongs, 0)
+      if (sortedSongs.length > 0) {
+        player.startPlay(sortedSongs[0]!, {
+          categoryId: music.currentCategory?.id,
+          search: music.searchQuery?.trim() || undefined,
+        })
       }
     }} title="Play all">
       <Icon name="play" size={14} />
@@ -212,49 +199,53 @@
     <!-- Mobile: Card-based song list -->
     <div class="song-cards">
       {#each sortedSongs as song, i}
+        {@const dominantColor = getCardColor(song)}
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
         <div
           class="song-card"
           class:active={isCurrentSong(song)}
           class:disabled-song={song.disabled}
-          onclick={() => playSong(song, i)}
+          class:has-thumb={!!song.thumbnailLink}
+          style="{dominantColor ? `--card-color: ${dominantColor};` : ''}{song.thumbnailLink ? `--card-thumb: url(${song.thumbnailLink})` : ''}"
         >
-          <div class="card-play-indicator">
-            {#if isCurrentSong(song) && player.isPlaying}
-              <span class="card-playing-icon"><Icon name="pause" size={14} /></span>
-            {:else}
-              <span class="card-play-icon"><Icon name="play" size={14} /></span>
-            {/if}
-          </div>
-          <div class="card-info">
-            <div class="card-title-row">
-              <span class="card-title">{getDisplayTitle(song)}</span>
-              <div class="card-badges">
-                {#if song.ext}
-                  <span
-                    class="badge quality-badge"
-                    class:lossless={['flac', 'wav', 'alac', 'aiff', 'ape', 'dsd'].includes(song.ext.toLowerCase())}
-                  >{song.ext.toUpperCase()}</span>
-                {/if}
-                {#if getAvailableLyricLangs(song).length > 0}
-                  <span class="badge lyric-badge">Lyric</span>
-                {/if}
+          <div class="card-body">
+            <button class="card-play-indicator" onclick={() => playSong(song, i)} title={isCurrentSong(song) && player.isPlaying ? 'Pause' : 'Play'}>
+              {#if isCurrentSong(song) && player.isPlaying}
+                <span class="card-playing-icon"><Icon name="pause" size={14} /></span>
+              {:else}
+                <span class="card-play-icon"><Icon name="play" size={14} /></span>
+              {/if}
+            </button>
+            <div class="card-info">
+              <div class="card-title-row">
+                <span class="card-title">{getDisplayTitle(song)}</span>
+                <div class="card-badges">
+                  {#if song.ext}
+                    <span
+                      class="badge quality-badge"
+                      class:lossless={['flac', 'wav', 'alac', 'aiff', 'ape', 'dsd'].includes(song.ext.toLowerCase())}
+                    >{song.ext.toUpperCase()}</span>
+                  {/if}
+                  {#if getAvailableLyricLangs(song).length > 0}
+                    <span class="badge lyric-badge">Lyric</span>
+                  {/if}
+                </div>
+              </div>
+              <div class="card-subtitle">
+                <span class="card-artist">{getDisplayArtist(song)}</span>
+                <span class="card-listens">{song.listens} plays</span>
               </div>
             </div>
-            <div class="card-subtitle">
-              <span class="card-artist">{getDisplayArtist(song)}</span>
-              <span class="card-listens">{song.listens} plays</span>
+            <div class="card-actions" onclick={(e) => e.stopPropagation()}>
+              {#if auth.isLoggedIn}
+                <FavoriteButton {song} />
+              {/if}
+              {#if auth.isAdmin}
+                <button class="edit-btn" onclick={() => editingSong = song} title="Edit">
+                  <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M16.474 5.408L18.592 7.526M17.836 3.374L12.109 9.1C11.81 9.4 11.611 9.783 11.54 10.198L11 13L13.802 12.46C14.217 12.389 14.6 12.19 14.9 11.891L20.626 6.164C20.9935 5.79651 21.1985 5.30348 21.1985 4.789C21.1985 4.27453 20.9935 3.7815 20.626 3.414C20.2585 3.04651 19.7655 2.8415 19.251 2.8415C18.7365 2.8415 18.2435 3.04651 17.876 3.414L17.836 3.374Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 15V18C19 19.105 18.105 20 17 20H6C4.895 20 4 19.105 4 18V7C4 5.895 4.895 5 6 5H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              {/if}
             </div>
-          </div>
-          <div class="card-actions" onclick={(e) => e.stopPropagation()}>
-            {#if auth.isLoggedIn}
-              <FavoriteButton {song} />
-            {/if}
-            {#if auth.isAdmin}
-              <button class="edit-btn" onclick={() => editingSong = song} title="Edit">
-                <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M16.474 5.408L18.592 7.526M17.836 3.374L12.109 9.1C11.81 9.4 11.611 9.783 11.54 10.198L11 13L13.802 12.46C14.217 12.389 14.6 12.19 14.9 11.891L20.626 6.164C20.9935 5.79651 21.1985 5.30348 21.1985 4.789C21.1985 4.27453 20.9935 3.7815 20.626 3.414C20.2585 3.04651 19.7655 2.8415 19.251 2.8415C18.7365 2.8415 18.2435 3.04651 17.876 3.414L17.836 3.374Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 15V18C19 19.105 18.105 20 17 20H6C4.895 20 4 19.105 4 18V7C4 5.895 4.895 5 6 5H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </button>
-            {/if}
           </div>
         </div>
       {/each}
@@ -715,57 +706,142 @@
     color: var(--text-secondary);
   }
 
-  /* Mobile card styles - hidden on desktop */
+  .song-table {
+    display: none;
+  }
+
   .song-cards {
     flex: 1;
     overflow-y: auto;
-    display: none;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-content: start;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+  }
+
+  @media (max-width: 1024px) {
+    .song-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @media (max-width: 768px) {
     .song-cards {
-      display: flex;
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
     }
 
-    .song-table {
-      display: none !important;
+    .song-card {
+      min-height: 50px;
+      border-radius: 6px;
+    }
+
+    .song-card.has-thumb::before {
+      background-size: 35% auto;
+    }
+
+    .card-body {
+      padding: 0.4rem 0.6rem;
+      gap: 0.4rem;
+    }
+
+    .card-title {
+      font-size: 0.82rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.72rem;
     }
   }
 
   .song-card {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.7rem 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    cursor: pointer;
-    transition: background-color 0.15s;
+    align-items: stretch;
+    overflow: hidden;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: box-shadow 0.15s, border-color 0.15s;
+    height: 90px;
+  }
+
+  .song-card.has-thumb {
+    position: relative;
+  }
+
+  .song-card.has-thumb::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--card-thumb) right center / 60% auto no-repeat;
+    border-radius: inherit;
+    mask-image: linear-gradient(to right, transparent 35%, black 50%);
+    -webkit-mask-image: linear-gradient(to right, transparent 35%, black 50%);
+    opacity: 0.45;
+  }
+
+  .song-card.has-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, var(--card-color, var(--bg-secondary)) 50%, transparent 85%);
+    border-radius: inherit;
+  }
+
+  .song-card:hover {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
   .song-card:active {
-    background-color: var(--bg-hover);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
   .song-card.active {
-    background-color: var(--bg-tertiary);
+    border-color: var(--accent);
   }
 
   .song-card.disabled-song {
     opacity: 0.45;
   }
 
+  /* Card body (content area) */
+  .card-body {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
   .card-play-indicator {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: var(--bg-tertiary);
+    background: rgba(255, 255, 255, 0.1);
     font-size: 0.7rem;
     color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.1s;
+  }
+
+  .card-play-indicator:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .song-card.has-thumb .card-play-indicator {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
   }
 
   .song-card.active .card-play-indicator {
@@ -782,7 +858,33 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.15rem;
+  }
+
+  .song-card.has-thumb .card-title,
+  .song-card.has-thumb .card-artist {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  .song-card.has-thumb .card-listens {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .song-card.has-thumb .card-actions button,
+  .song-card.has-thumb .card-actions :global(button),
+  .song-card.has-thumb .edit-btn,
+  .song-card.has-thumb .badge {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  .song-card.has-thumb .card-play-indicator {
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .song-card.has-thumb .card-play-indicator:hover {
+    background: rgba(0, 0, 0, 0.6);
   }
 
   .card-title-row {

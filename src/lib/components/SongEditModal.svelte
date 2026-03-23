@@ -17,6 +17,7 @@
   let title = $state<Record<string, string>>({ ...song.title } as Record<string, string>)
   let artist = $state<Record<string, string>>({ ...song.artist } as Record<string, string>)
   let lyrics = $state<Record<string, string>>({ ...song.lyrics } as Record<string, string>)
+  let thumbnailLink = $state(song.thumbnailLink ?? '')
   let status = $state(song.status)
   let note = $state(song.note ?? '')
   let saving = $state(false)
@@ -40,6 +41,7 @@
         title: title as LocalizedText,
         artist: artist as LocalizedText,
         lyrics: lyrics as LocalizedText,
+        thumbnailLink,
         status,
         note,
       })
@@ -105,6 +107,16 @@
           {:else}
             <button class="add-lang-btn" onclick={() => addingLyricLang = true}>+ lang</button>
           {/if}
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Thumbnail URL</label>
+        <div class="thumb-field">
+          {#if thumbnailLink}
+            <img class="thumb-preview" src={thumbnailLink} alt="thumbnail" />
+          {/if}
+          <input type="text" class="text-input" bind:value={thumbnailLink} placeholder="https://..." />
         </div>
       </div>
 
@@ -296,6 +308,25 @@
 
   .add-lang-btn:hover {
     color: var(--accent);
+  }
+
+  .thumb-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .thumb-field .text-input {
+    flex: 1;
+  }
+
+  .thumb-preview {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
   }
 
   .text-input {

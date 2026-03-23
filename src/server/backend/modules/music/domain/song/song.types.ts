@@ -29,6 +29,9 @@ export interface ISong {
   ext: string
   filename: string
 
+  /** Google Drive thumbnail URL */
+  thumbnailLink?: string
+
   /** Audio metadata — populated by analysis tool */
   sampleRate?: number    // Hz, e.g. 44100, 48000, 96000
   bitDepth?: number      // bits per sample, e.g. 16, 24, 32

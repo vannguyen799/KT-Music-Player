@@ -1,8 +1,13 @@
 import { localize, type Song } from '$lib/types/song'
 import { getStreamingUrl, getAudioMetadata, revokeCoverUrl, type AudioMetadata } from '$lib/services/audio.service'
-import { trackListen } from '$lib/services/song.service'
+import { trackListen, getSongFileIds, getSongByFileId } from '$lib/services/song.service'
 import { api } from '$lib/services/api'
 import type { PlayerConfig } from '$lib/types/user'
+
+export interface QueueContext {
+  categoryId?: string
+  search?: string
+}
 
 export type LoopMode = 'none' | 'all' | 'one'
 
@@ -17,8 +22,12 @@ let loopMode = $state<LoopMode>('all')
 let isRandom = $state(false)
 let duration = $state(0)
 let currentTime = $state(0)
-let queue = $state<Song[]>([])
+let queueIds = $state<string[]>([])
 let currentIndex = $state(-1)
+let queueContext = $state<QueueContext>({})
+let queueReady = $state(false)
+// Keep song cache for already-fetched songs
+let songCache = new Map<string, Song>()
 let coverUrl = $state<string | null>(null)
 let speed = $state(1)
 let playerPosition = $state<'bottom' | 'top'>('bottom')
@@ -116,13 +125,12 @@ function createAudio(): HTMLAudioElement {
 }
 
 function getNextIndex(): number | null {
-  if (queue.length === 0) return null
+  if (queueIds.length === 0) return null
 
   if (loopMode === 'one') return currentIndex
 
-  // When isRandom, queue is already shuffled by backend — just play sequentially
   const nextIdx = currentIndex + 1
-  if (nextIdx >= queue.length) {
+  if (nextIdx >= queueIds.length) {
     return loopMode === 'all' ? 0 : null
   }
   return nextIdx
@@ -132,15 +140,53 @@ async function prepareNext() {
   const nextIdx = getNextIndex()
   if (nextIdx === null) return
 
-  const nextSong = queue[nextIdx]
-  if (!nextSong || preloadedNext?.song.fileId === nextSong.fileId) return
+  const nextFileId = queueIds[nextIdx]
+  if (!nextFileId || preloadedNext?.song.fileId === nextFileId) return
 
   try {
+    const nextSong = songCache.get(nextFileId) || await getSongByFileId(nextFileId)
+    if (!nextSong) return
+    songCache.set(nextFileId, nextSong)
     const url = await getStreamingUrl(nextSong.fileId)
     const metadata = await getAudioMetadata(nextSong.fileId)
     preloadedNext = { song: nextSong, url, metadata }
   } catch {
     // Preload is best-effort
+  }
+}
+
+async function fetchAndSetQueue(song: Song, context: QueueContext) {
+  queueContext = context
+  queueReady = false
+  songCache.set(song.fileId, song)
+
+  try {
+    const ids = await getSongFileIds(context.categoryId, context.search)
+
+    // If user changed song while fetching, abort
+    if (currentSong?.fileId !== song.fileId) return
+
+    if (isRandom) {
+      // Shuffle IDs, but keep current song at current position
+      const currentFileId = song.fileId
+      const otherIds = ids.filter(id => id !== currentFileId)
+      for (let i = otherIds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [otherIds[i], otherIds[j]] = [otherIds[j]!, otherIds[i]!]
+      }
+      queueIds = [currentFileId, ...otherIds]
+      currentIndex = 0
+    } else {
+      queueIds = ids
+      const idx = ids.indexOf(song.fileId)
+      currentIndex = idx >= 0 ? idx : 0
+    }
+    queueReady = true
+  } catch {
+    // Keep playing with just the current song
+    queueIds = [song.fileId]
+    currentIndex = 0
+    queueReady = true
   }
 }
 
@@ -245,51 +291,49 @@ export function getPlayerStore() {
     scheduleSave()
   }
 
-  function shuffleRemaining() {
-    if (queue.length <= 1) return
-    const before = queue.slice(0, currentIndex + 1)
-    const after = queue.slice(currentIndex + 1)
-    for (let i = after.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [after[i], after[j]] = [after[j]!, after[i]!]
+  function startPlay(song: Song, context: QueueContext) {
+    // Play immediately
+    queueIds = [song.fileId]
+    currentIndex = 0
+    songCache.set(song.fileId, song)
+    playSong(song)
+    // Fetch full queue in background
+    fetchAndSetQueue(song, context)
+  }
+
+  async function playByIndex(idx: number) {
+    const fileId = queueIds[idx]
+    if (!fileId) return
+
+    currentIndex = idx
+    let song = songCache.get(fileId)
+    if (!song) {
+      song = await getSongByFileId(fileId) ?? undefined
+      if (!song) return
+      songCache.set(fileId, song)
     }
-    queue = [...before, ...after]
-  }
-
-  function setQueue(songs: Song[], startIndex = 0) {
-    queue = songs
-    currentIndex = startIndex
-    const song = songs[startIndex]
-    if (song) playSong(song)
-  }
-
-  function replaceQueue(songs: Song[], currentIdx = 0) {
-    queue = songs
-    currentIndex = currentIdx
+    playSong(song)
   }
 
   function playNext() {
-    if (queue.length === 0) return
+    if (queueIds.length === 0) return
 
     if (loopMode === 'one') {
       if (currentSong) playSong(currentSong)
       return
     }
 
-    // When isRandom, queue is already shuffled by backend — play sequentially
     let nextIdx = currentIndex + 1
-    if (nextIdx >= queue.length) {
+    if (nextIdx >= queueIds.length) {
       if (loopMode === 'all') nextIdx = 0
       else return
     }
 
-    currentIndex = nextIdx
-    const next = queue[nextIdx]
-    if (next) playSong(next)
+    playByIndex(nextIdx)
   }
 
   function playPrev() {
-    if (queue.length === 0) return
+    if (queueIds.length === 0) return
 
     // If more than 3 seconds in, restart current song
     if (audio && audio.currentTime > 3) {
@@ -298,10 +342,8 @@ export function getPlayerStore() {
     }
 
     let prevIdx = currentIndex - 1
-    if (prevIdx < 0) prevIdx = queue.length - 1
-    currentIndex = prevIdx
-    const prev = queue[prevIdx]
-    if (prev) playSong(prev)
+    if (prevIdx < 0) prevIdx = queueIds.length - 1
+    playByIndex(prevIdx)
   }
 
   function toggleLoop() {
@@ -313,8 +355,15 @@ export function getPlayerStore() {
 
   function toggleRandom() {
     isRandom = !isRandom
-    if (isRandom && queue.length > 0) {
-      shuffleRemaining()
+    if (isRandom && queueIds.length > 1) {
+      // Shuffle remaining IDs after current
+      const before = queueIds.slice(0, currentIndex + 1)
+      const after = queueIds.slice(currentIndex + 1)
+      for (let i = after.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [after[i], after[j]] = [after[j]!, after[i]!]
+      }
+      queueIds = [...before, ...after]
     }
     scheduleSave()
   }
@@ -328,7 +377,8 @@ export function getPlayerStore() {
     get isRandom() { return isRandom },
     get duration() { return duration },
     get currentTime() { return currentTime },
-    get queue() { return queue },
+    get queue() { return queueIds },
+    get queueReady() { return queueReady },
     get coverUrl() { return coverUrl },
     get speed() { return speed },
     get playerPosition() { return playerPosition },
@@ -353,16 +403,13 @@ export function getPlayerStore() {
     saveCurrentToServer() {
       api.put('/api/user/player-config', { playerConfig: getConfig() }).catch(() => {})
     },
-    playSong,
+    startPlay,
     pause,
     resume,
     togglePlay,
     seek,
     setVolume,
     setSpeed,
-    setQueue,
-    replaceQueue,
-    shuffleRemaining,
     playNext,
     playPrev,
     toggleLoop,

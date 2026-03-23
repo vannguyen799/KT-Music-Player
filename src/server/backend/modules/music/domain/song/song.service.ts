@@ -54,6 +54,11 @@ export class SongService {
     return this.repo.getAllCategories()
   }
 
+  async getFileIds(categoryId?: string, search?: string): Promise<string[]> {
+    const excludeCategories = categoryId ? [] : await this.getDisabledCategoryIds()
+    return this.repo.findFileIds(categoryId, search, false, excludeCategories)
+  }
+
   async findByFileId(fileId: string): Promise<ISong | null> {
     return this.repo.findByFileId(fileId)
   }

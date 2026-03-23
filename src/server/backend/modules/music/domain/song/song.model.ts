@@ -15,6 +15,7 @@ const songSchema = new mongoose.Schema({
   disabled: { type: Boolean, default: false },
   note: { type: String, default: '' },
   listens: { type: Number, default: 0 },
+  thumbnailLink: { type: String, default: '' },
   ext: { type: String, default: '' },
   filename: { type: String, default: '' },
   sampleRate: { type: Number },
