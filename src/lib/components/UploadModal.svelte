@@ -1,5 +1,6 @@
 <script lang="ts">
   import { uploadSongs, checkDuplicates, type UploadSongMeta, type Category, type DuplicateMatch } from '$lib/services/admin.service'
+  import Icon from './Icon.svelte'
   import LocalizedEditCell from './LocalizedEditCell.svelte'
 
   let {
@@ -174,7 +175,7 @@
   <div class="modal-content" onclick={(e) => e.stopPropagation()}>
     <div class="modal-header">
       <h3>Upload to <span class="cat-name">{category.name}</span></h3>
-      <button class="close-btn" onclick={onclose}>&times;</button>
+      <button class="close-btn" onclick={onclose}><Icon name="x" size={18} /></button>
     </div>
 
     <div class="modal-body">
@@ -222,7 +223,7 @@
                   <span class="dup-badge">duplicate</span>
                 {/if}
                 <span class="file-size">{(f.file.size / 1024 / 1024).toFixed(1)}MB</span>
-                <button class="file-remove" onclick={() => removeFile(i)}>&times;</button>
+                <button class="file-remove" onclick={() => removeFile(i)}><Icon name="x" size={14} /></button>
               </div>
               {#if f.duplicates && f.duplicates.length > 0}
                 <div class="dup-warning">

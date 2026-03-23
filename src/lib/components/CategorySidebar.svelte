@@ -5,6 +5,7 @@
   import { getMobileStore } from '$lib/stores/mobile.store.svelte'
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import ChangePasswordModal from './ChangePasswordModal.svelte'
+  import Icon from './Icon.svelte'
   import type { Category } from '$lib/services/admin.service'
 
   const music = getMusicStore()
@@ -105,7 +106,7 @@
               class="arrow"
               class:open={isExpanded}
               onclick={(e) => toggleExpand(node.category.id, e)}
-            >&#9656;</span>
+            ><Icon name="chevron-right" size={12} /></span>
           {:else}
             <span class="arrow-placeholder"></span>
           {/if}

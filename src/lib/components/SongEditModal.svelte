@@ -1,5 +1,6 @@
 <script lang="ts">
   import LocalizedEditCell from './LocalizedEditCell.svelte'
+  import Icon from './Icon.svelte'
   import { updateSong } from '$lib/services/song.service'
   import type { Song, LocalizedText } from '$lib/types/song'
 
@@ -57,7 +58,7 @@
   <div class="modal-content" onclick={(e) => e.stopPropagation()}>
     <div class="modal-header">
       <h3>Edit Song</h3>
-      <button class="close-btn" onclick={onclose}>&times;</button>
+      <button class="close-btn" onclick={onclose}><Icon name="x" size={18} /></button>
     </div>
 
     <div class="modal-body">

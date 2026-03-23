@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getAuthStore } from '$lib/stores/auth.store.svelte'
+  import Icon from './Icon.svelte'
   import { api } from '$lib/services/api'
   import type { Song } from '$lib/types/song'
 
@@ -25,7 +26,7 @@
 </script>
 
 <button class="fav-btn" class:active={isFav} onclick={toggle} title={isFav ? 'Remove favorite' : 'Add favorite'}>
-  {isFav ? '★' : '☆'}
+  <Icon name={isFav ? 'star' : 'star-outline'} size={16} />
 </button>
 
 <style>

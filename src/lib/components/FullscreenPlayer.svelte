@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getPlayerStore } from '$lib/stores/player.store.svelte'
+  import Icon from './Icon.svelte'
   import { getDisplayTitle, getDisplayArtist, getAvailableLyricLangs, type LangCode } from '$lib/types/song'
   import { parseLRC, getCurrentLineIndex } from '$lib/player/LyricLRC'
   // @ts-ignore
@@ -159,7 +160,7 @@
         {#if player.coverUrl}
           <img class="fc-cover-img" src={player.coverUrl} alt="Cover art" />
         {:else}
-          <div class="fc-cover-placeholder">&#9835;</div>
+          <div class="fc-cover-placeholder"><Icon name="music-note" size={64} /></div>
         {/if}
       </div>
       {#if player.currentSong}
@@ -188,7 +189,7 @@
         {:else}
           <div></div>
         {/if}
-        <button class="fc-close-btn" onclick={onclose} title="Close">&times;</button>
+        <button class="fc-close-btn" onclick={onclose} title="Close"><Icon name="x" size={24} /></button>
       </div>
 
       <div class="fc-lyrics" bind:this={lyricsEl}>
@@ -241,25 +242,25 @@
 
     <div class="fc-buttons">
       <button class="fc-btn" onclick={() => player.toggleRandom()} class:active={player.isRandom} title="Shuffle">
-        &#8645;
+        <Icon name="shuffle" size={18} />
       </button>
       <button class="fc-btn" onclick={() => player.playPrev()} title="Previous">
-        &#9664;&#9664;
+        <Icon name="prev" size={18} />
       </button>
       <button class="fc-btn fc-play-pause" onclick={() => player.togglePlay()} title={player.isPlaying ? 'Pause' : 'Play'}>
         {#if player.isLoading}
           ...
         {:else if player.isPlaying}
-          &#10074;&#10074;
+          <Icon name="pause" size={24} />
         {:else}
-          &#9654;
+          <Icon name="play" size={24} />
         {/if}
       </button>
       <button class="fc-btn" onclick={() => player.playNext()} title="Next">
-        &#9654;&#9654;
+        <Icon name="next" size={18} />
       </button>
       <button class="fc-btn" onclick={() => player.toggleLoop()} class:active={player.loopMode !== 'none'} title="Loop: {player.loopMode}">
-        &#8634;{loopLabel()}
+        <Icon name="loop" size={18} />{loopLabel()}
       </button>
       <div class="fc-volume">
         <input
@@ -276,7 +277,7 @@
       <!-- Settings popover -->
       <div class="fc-settings-wrapper">
         <button class="fc-btn" onclick={() => showSettings = !showSettings} class:active={showSettings} title="Settings">
-          &#9881;
+          <Icon name="settings" size={18} />
         </button>
         {#if showSettings}
           <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->

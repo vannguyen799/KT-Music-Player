@@ -9,6 +9,7 @@
   import FavoriteButton from './FavoriteButton.svelte'
   import SongEditModal from './SongEditModal.svelte'
   import UploadModal from './UploadModal.svelte'
+  import Icon from './Icon.svelte'
 
   const music = getMusicStore()
   const player = getPlayerStore()
@@ -149,12 +150,12 @@
         player.setQueue(sortedSongs, 0)
       }
     }} title="Play all">
-      &#9654;
+      <Icon name="play" size={14} />
     </button>
     <div class="header-spacer"></div>
     {#if auth.isAdmin && music.currentCategory}
       <button class="upload-btn" onclick={() => showUpload = true} title="Upload songs to this category">
-        &#8679; Upload
+        <Icon name="upload" size={14} /> Upload
       </button>
     {/if}
   </div>
@@ -184,7 +185,7 @@
           class="page-btn"
           disabled={music.currentPage === 1}
           onclick={() => music.goToPage(music.currentPage - 1)}
-        >&laquo;</button>
+        ><Icon name="chevrons-left" size={14} /></button>
         {#each pageNumbers as p}
           {#if p === '...'}
             <span class="page-ellipsis">...</span>
@@ -200,7 +201,7 @@
           class="page-btn"
           disabled={music.currentPage === music.totalPages}
           onclick={() => music.goToPage(music.currentPage + 1)}
-        >&raquo;</button>
+        ><Icon name="chevrons-right" size={14} /></button>
       </div>
     {/if}
   </div>
@@ -220,9 +221,9 @@
         >
           <div class="card-play-indicator">
             {#if isCurrentSong(song) && player.isPlaying}
-              <span class="card-playing-icon">&#10074;&#10074;</span>
+              <span class="card-playing-icon"><Icon name="pause" size={14} /></span>
             {:else}
-              <span class="card-play-icon">&#9654;</span>
+              <span class="card-play-icon"><Icon name="play" size={14} /></span>
             {/if}
           </div>
           <div class="card-info">
@@ -281,9 +282,9 @@
                   title="Play"
                 >
                   {#if isCurrentSong(song) && player.isPlaying}
-                    &#10074;&#10074;
+                    <Icon name="pause" size={14} />
                   {:else}
-                    &#9654;
+                    <Icon name="play" size={14} />
                   {/if}
                 </button>
               </td>

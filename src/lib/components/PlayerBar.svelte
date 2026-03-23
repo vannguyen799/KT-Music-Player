@@ -4,6 +4,7 @@
   import { getDisplayTitle, getDisplayArtist } from '$lib/types/song'
   import LyricsDisplay from './LyricsDisplay.svelte'
   import FullscreenPlayer from './FullscreenPlayer.svelte'
+  import Icon from './Icon.svelte'
 
   const player = getPlayerStore()
   const mobile = getMobileStore()
@@ -41,10 +42,10 @@
     }
   }
 
-  function volumeIcon(): string {
-    if (player.volume === 0) return '\u{1F507}'   // muted
-    if (player.volume < 0.5) return '\u{1F509}'   // low
-    return '\u{1F50A}'                              // high
+  function volumeIconName(): string {
+    if (player.volume === 0) return 'volume-mute'
+    if (player.volume < 0.5) return 'volume-low'
+    return 'volume-high'
   }
 
   function formatTime(seconds: number): string {
@@ -99,7 +100,7 @@
       {#if player.coverUrl}
         <img class="cover-img" src={player.coverUrl} alt="Cover art" />
       {:else}
-        <div class="cover-placeholder">&#9835;</div>
+        <div class="cover-placeholder"><Icon name="music-note" size={20} /></div>
       {/if}
     </div>
     <div class="mobile-song-text">
@@ -113,19 +114,19 @@
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <div class="mobile-controls" onclick={(e) => e.stopPropagation()}>
       <button class="mobile-ctrl-btn" onclick={() => player.playPrev()}>
-        &#9664;&#9664;
+        <Icon name="prev" size={16} />
       </button>
       <button class="mobile-ctrl-btn mobile-play-pause" onclick={() => player.togglePlay()}>
         {#if player.isLoading}
           ...
         {:else if player.isPlaying}
-          &#10074;&#10074;
+          <Icon name="pause" size={18} />
         {:else}
-          &#9654;
+          <Icon name="play" size={18} />
         {/if}
       </button>
       <button class="mobile-ctrl-btn" onclick={() => player.playNext()}>
-        &#9654;&#9654;
+        <Icon name="next" size={16} />
       </button>
     </div>
   </div>
@@ -147,7 +148,7 @@
         {#if player.coverUrl}
           <img class="cover-img" src={player.coverUrl} alt="Cover art" />
         {:else}
-          <div class="cover-placeholder">&#9835;</div>
+          <div class="cover-placeholder"><Icon name="music-note" size={20} /></div>
         {/if}
       </div>
       <div class="song-text">
@@ -168,32 +169,32 @@
 
     <div class="controls">
       <button class="ctrl-btn" onclick={() => player.playPrev()} title="Previous">
-        &#9664;&#9664;
+        <Icon name="prev" size={14} />
       </button>
       <button class="ctrl-btn play-pause" onclick={() => player.togglePlay()} title={player.isPlaying ? 'Pause' : 'Play'}>
         {#if player.isLoading}
           ...
         {:else if player.isPlaying}
-          &#10074;&#10074;
+          <Icon name="pause" size={16} />
         {:else}
-          &#9654;
+          <Icon name="play" size={16} />
         {/if}
       </button>
       <button class="ctrl-btn" onclick={() => player.playNext()} title="Next">
-        &#9654;&#9654;
+        <Icon name="next" size={14} />
       </button>
     </div>
 
     <div class="player-right">
       <span class="time">{formatTime(player.currentTime)} / {formatTime(player.duration)}</span>
       <button class="ctrl-btn" onclick={() => showFullscreen = true} title="Fullscreen player">
-        &#9974;
+        <Icon name="fullscreen" size={14} />
       </button>
 
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div class="volume-wrapper" onmouseenter={onVolumeEnter} onmouseleave={onVolumeLeave}>
         <button class="ctrl-btn volume-icon" onclick={toggleMute} title={player.volume === 0 ? 'Unmute' : 'Mute'}>
-          {volumeIcon()}
+          <Icon name={volumeIconName()} size={16} />
         </button>
         {#if showVolumePopover}
           <div class="volume-popover">
@@ -214,7 +215,7 @@
 
       <div class="settings-wrapper">
         <button class="ctrl-btn" onclick={() => showSettings = !showSettings} class:active={showSettings} title="Settings">
-          &#9881;
+          <Icon name="settings" size={14} />
         </button>
         {#if showSettings}
           <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
