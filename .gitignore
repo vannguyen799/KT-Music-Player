@@ -19,6 +19,3 @@ Thumbs.db
 
 # Deployment
 .vercel/
-
-# NPM config (may contain tokens)
-.npmrc
