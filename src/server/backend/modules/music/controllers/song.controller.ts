@@ -17,7 +17,8 @@ export class SongController {
     @Query('search') search: string,
   ) {
     const p = Math.max(1, parseInt(page) || 1)
-    const l = Math.min(100, Math.max(1, parseInt(limit) || 50))
+    const rawLimit = parseInt(limit)
+    const l = rawLimit === 0 ? 0 : Math.min(100, Math.max(1, rawLimit || 50))
     const q = search?.trim() || ''
 
     if (!category && !q) {

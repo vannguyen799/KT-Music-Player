@@ -62,8 +62,10 @@ export class SongRepository extends BaseRepository<ISong> {
         { filename: regex },
       ]
     }
+    const query = this.model.find(filter)
+    if (limit > 0) query.skip((page - 1) * limit).limit(limit)
     const [docs, total] = await Promise.all([
-      this.model.find(filter).skip((page - 1) * limit).limit(limit).lean(),
+      query.lean(),
       this.model.countDocuments(filter),
     ])
     return { songs: docs.map(normalizeSong), total }
