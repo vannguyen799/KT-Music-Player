@@ -52,7 +52,7 @@
 
 <CategorySidebar />
 
-<div class="app">
+<div class="app" class:sidebar-pushed={mobile.sidebarOpen}>
   {#if player.playerPosition === 'top'}
     <PlayerBar />
   {:else}
@@ -74,6 +74,17 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    transition: margin-left 0.25s ease;
+  }
+
+  .app.sidebar-pushed {
+    margin-left: 260px;
+  }
+
+  @media (max-width: 768px) {
+    .app.sidebar-pushed {
+      margin-left: 0;
+    }
   }
 
   .main-content {

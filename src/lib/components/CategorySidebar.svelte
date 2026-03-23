@@ -308,12 +308,20 @@
     color: var(--accent);
   }
 
-  /* Mobile: sidebar becomes slide-out drawer */
+  /* Desktop: no backdrop (sidebar pushes content) */
   .sidebar-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 200;
+    display: none;
+  }
+
+  /* Mobile: sidebar becomes overlay drawer with backdrop */
+  @media (max-width: 768px) {
+    .sidebar-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+    }
   }
 
   @media (max-width: 768px) {
