@@ -11,20 +11,18 @@
 
 <header class="header">
   <nav class="nav-bar">
-    {#if mobile.isMobile}
-      <button class="hamburger" onclick={() => mobile.toggleSidebar()} title="Menu">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
-    {/if}
+    <button class="hamburger" onclick={() => mobile.toggleSidebar()} title="Menu">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
     <a href="/" class="nav-brand">KT Player</a>
 
     <div class="nav-right">
       {#if auth.isLoggedIn}
-        <span class="username hide-mobile">{auth.user?.username}</span>
+        <span class="username">{auth.user?.username}</span>
         <button class="nav-link" onclick={() => auth.logout()}>Logout</button>
       {:else}
         <button class="nav-link" onclick={() => showLogin = true}>Login</button>

@@ -52,43 +52,35 @@
     if (hasChildren(cat.id) && !expanded.has(cat.id)) {
       expanded = new Set([...expanded, cat.id])
     }
-    if (mobile.isMobile) {
-      mobile.closeSidebar()
-    }
+    mobile.closeSidebar()
   }
 
   function goHome() {
     goto('/')
-    if (mobile.isMobile) {
-      mobile.closeSidebar()
-    }
+    mobile.closeSidebar()
   }
 
   function navTo(path: string) {
     goto(path)
-    if (mobile.isMobile) {
-      mobile.closeSidebar()
-    }
+    mobile.closeSidebar()
   }
 </script>
 
-<!-- Mobile: backdrop overlay -->
-{#if mobile.isMobile && mobile.sidebarOpen}
+<!-- Backdrop overlay -->
+{#if mobile.sidebarOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div class="sidebar-backdrop" onclick={() => mobile.closeSidebar()}></div>
 {/if}
 
-<aside class="category-sidebar" class:mobile-open={mobile.isMobile && mobile.sidebarOpen} class:mobile-hidden={mobile.isMobile && !mobile.sidebarOpen}>
+<aside class="category-sidebar" class:sidebar-open={mobile.sidebarOpen}>
   <div class="sidebar-header">
     <h3>Categories</h3>
-    {#if mobile.isMobile}
-      <button class="close-btn" onclick={() => mobile.closeSidebar()} title="Close menu">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-    {/if}
+    <button class="close-btn" onclick={() => mobile.closeSidebar()} title="Close menu">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
   </div>
   <div class="category-list">
     <button
@@ -150,14 +142,24 @@
 
 <style>
   .category-sidebar {
-    width: 200px;
-    border-right: 1px solid var(--border);
-    padding: 0.75rem 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    z-index: 210;
+    padding: 1rem 0 0.75rem;
     overflow-y: auto;
-    flex-shrink: 0;
     background: var(--bg-secondary);
     display: flex;
     flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .category-sidebar.sidebar-open {
+    transform: translateX(0);
   }
 
   .sidebar-header {
@@ -294,39 +296,7 @@
 
   @media (max-width: 768px) {
     .category-sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
       width: 280px;
-      z-index: 210;
-      padding-top: 1rem;
-      transform: translateX(-100%);
-      transition: transform 0.25s ease;
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .category-sidebar.mobile-open {
-      transform: translateX(0);
-    }
-
-    .category-sidebar.mobile-hidden {
-      transform: translateX(-100%);
-    }
-
-    .cat-item {
-      padding: 0.6rem 0.75rem;
-      font-size: 0.9rem;
-    }
-
-    .arrow {
-      width: 24px;
-      height: 24px;
-      font-size: 0.8rem;
-    }
-
-    .arrow-placeholder {
-      width: 24px;
     }
   }
 </style>
