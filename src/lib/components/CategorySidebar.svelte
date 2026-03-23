@@ -55,17 +55,17 @@
     if (hasChildren(cat.id) && !expanded.has(cat.id)) {
       expanded = new Set([...expanded, cat.id])
     }
-    mobile.closeSidebar()
+    if (mobile.isMobile) mobile.closeSidebar()
   }
 
   function goHome() {
     goto('/')
-    mobile.closeSidebar()
+    if (mobile.isMobile) mobile.closeSidebar()
   }
 
   function navTo(path: string) {
     goto(path)
-    mobile.closeSidebar()
+    if (mobile.isMobile) mobile.closeSidebar()
   }
 </script>
 
@@ -78,12 +78,6 @@
 <aside class="category-sidebar" class:sidebar-open={mobile.sidebarOpen}>
   <div class="sidebar-header">
     <h3>Categories</h3>
-    <button class="close-btn" onclick={() => mobile.closeSidebar()} title="Close menu">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-      </svg>
-    </button>
   </div>
   <div class="category-list">
     <button
@@ -130,7 +124,7 @@
     <div class="sidebar-section">
       <h3>Account</h3>
       <div class="category-list">
-        <button class="cat-item admin-item" onclick={() => { showChangePassword = true; mobile.closeSidebar() }}>
+        <button class="cat-item admin-item" onclick={() => { showChangePassword = true; if (mobile.isMobile) mobile.closeSidebar() }}>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           <span class="cat-label">Change Password</span>
         </button>
@@ -174,7 +168,7 @@
     flex-direction: column;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
   }
 
   .category-sidebar.sidebar-open {
@@ -197,21 +191,7 @@
     margin: 0;
   }
 
-  .close-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    padding: 0.2rem;
-    border-radius: 4px;
-  }
-
-  .close-btn:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-  }
-
-  .category-list {
+.category-list {
     display: flex;
     flex-direction: column;
   }
