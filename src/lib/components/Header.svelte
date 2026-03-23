@@ -23,10 +23,6 @@
     <a href="/" class="nav-brand">KT Player</a>
 
     <div class="nav-right">
-      {#if auth.isAdmin}
-        <a href="/admin/scan" class="nav-link">Scan</a>
-        <a href="/admin/categories" class="nav-link hide-mobile">Categories</a>
-      {/if}
       {#if auth.isLoggedIn}
         <span class="username hide-mobile">{auth.user?.username}</span>
         <button class="nav-link" onclick={() => auth.logout()}>Logout</button>

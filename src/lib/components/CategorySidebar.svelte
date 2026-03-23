@@ -1,11 +1,14 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
+  import { page } from '$app/stores'
   import { getMusicStore } from '$lib/stores/music.store.svelte'
   import { getMobileStore } from '$lib/stores/mobile.store.svelte'
+  import { getAuthStore } from '$lib/stores/auth.store.svelte'
   import type { Category } from '$lib/services/admin.service'
 
   const music = getMusicStore()
   const mobile = getMobileStore()
+  const auth = getAuthStore()
 
   interface TreeNode {
     category: Category
@@ -56,6 +59,13 @@
 
   function goHome() {
     goto('/')
+    if (mobile.isMobile) {
+      mobile.closeSidebar()
+    }
+  }
+
+  function navTo(path: string) {
+    goto(path)
     if (mobile.isMobile) {
       mobile.closeSidebar()
     }
@@ -120,6 +130,22 @@
 
     {@render renderNodes(tree, 0)}
   </div>
+
+  {#if auth.isAdmin}
+    <div class="sidebar-section">
+      <h3>Admin</h3>
+      <div class="category-list">
+        <button class="cat-item admin-item" class:active={$page.url.pathname === '/admin/scan'} onclick={() => navTo('/admin/scan')}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span class="cat-label">Scan</span>
+        </button>
+        <button class="cat-item admin-item" class:active={$page.url.pathname === '/admin/categories'} onclick={() => navTo('/admin/categories')}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          <span class="cat-label">Categories</span>
+        </button>
+      </div>
+    </div>
+  {/if}
 </aside>
 
 <style>
@@ -130,6 +156,8 @@
     overflow-y: auto;
     flex-shrink: 0;
     background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
   }
 
   .sidebar-header {
@@ -226,6 +254,34 @@
   .arrow-placeholder {
     width: 16px;
     flex-shrink: 0;
+  }
+
+  .sidebar-section {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+  }
+
+  .sidebar-section h3 {
+    padding: 0 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .admin-item {
+    gap: 0.5rem;
+  }
+
+  .admin-item svg {
+    flex-shrink: 0;
+    color: var(--text-muted);
+  }
+
+  .admin-item:hover svg {
+    color: var(--text-primary);
+  }
+
+  .admin-item.active svg {
+    color: var(--accent);
   }
 
   /* Mobile: sidebar becomes slide-out drawer */
